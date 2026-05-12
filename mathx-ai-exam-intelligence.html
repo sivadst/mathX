@@ -1,0 +1,1854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MATHX — AI Exam Intelligence System</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;500;600;700;800&family=Outfit:wght@300;400;500;600;700&family=JetBrains+Mono:wght@300;400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.css">
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/katex.min.js"></script>
+<script defer src="https://cdn.jsdelivr.net/npm/katex@0.16.9/dist/contrib/auto-render.min.js"></script>
+<style>
+/* ═══════════════ TOKENS ═══════════════ */
+:root{
+  --ink:#06060f;
+  --ink2:#0a0a18;
+  --ink3:#0f0f20;
+  --glass:rgba(255,255,255,0.032);
+  --glass2:rgba(255,255,255,0.06);
+  --rim:rgba(255,255,255,0.07);
+  --rim2:rgba(100,60,255,0.28);
+  --snow:#f0f0ff;
+  --snow2:#a0a0c8;
+  --snow3:#555578;
+  --v:#6c3fff;
+  --vl:#8b5cf6;
+  --b:#2563eb;
+  --bl:#3b82f6;
+  --c:#0891b2;
+  --cl:#06b6d4;
+  --rose:#e11d48;
+  --em:#10b981;
+  --gold:#d97706;
+  --gv:linear-gradient(135deg,#6c3fff,#2563eb);
+  --gc:linear-gradient(135deg,#2563eb,#0891b2);
+  --gp:linear-gradient(135deg,#6c3fff,#e11d48);
+  --gg:linear-gradient(135deg,#10b981,#059669);
+  --shadow-v:0 0 60px rgba(108,63,255,.25);
+  --shadow-b:0 0 60px rgba(37,99,235,.2);
+  --r:18px;--rs:10px;
+  --sb:260px;
+}
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+html{scroll-behavior:smooth;font-size:16px}
+body{font-family:'Outfit',sans-serif;background:var(--ink);color:var(--snow);min-height:100vh;overflow-x:hidden;cursor:none}
+
+/* ── CUSTOM CURSOR ── */
+.cursor{position:fixed;width:12px;height:12px;border-radius:50%;background:var(--vl);pointer-events:none;z-index:9999;transform:translate(-50%,-50%);transition:transform .08s,width .2s,height .2s,opacity .2s;mix-blend-mode:screen}
+.cursor-ring{position:fixed;width:36px;height:36px;border-radius:50%;border:1px solid rgba(139,92,246,.4);pointer-events:none;z-index:9998;transform:translate(-50%,-50%);transition:transform .15s ease,width .3s,height .3s}
+
+/* ── AMBIENT ── */
+.ambient{position:fixed;inset:0;z-index:0;pointer-events:none;overflow:hidden}
+.blob{position:absolute;border-radius:50%;filter:blur(130px);animation:morph 25s ease-in-out infinite;opacity:.08}
+.b1{width:800px;height:800px;background:radial-gradient(circle,#6c3fff,#2563eb);top:-300px;left:-200px;animation-delay:0s}
+.b2{width:600px;height:600px;background:radial-gradient(circle,#0891b2,#2563eb);bottom:-200px;right:-150px;animation-delay:-10s}
+.b3{width:400px;height:400px;background:radial-gradient(circle,#6c3fff,#e11d48);top:40%;left:40%;animation-delay:-18s}
+@keyframes morph{0%,100%{transform:translate(0,0) scale(1)}33%{transform:translate(60px,-40px) scale(1.08)}66%{transform:translate(-30px,50px) scale(.93)}}
+
+/* ── GRAIN OVERLAY ── */
+body::before{content:'';position:fixed;inset:0;z-index:1;pointer-events:none;opacity:.025;background-image:url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='1'/%3E%3C/svg%3E");background-size:200px}
+
+/* ── LAYOUT ── */
+.app{display:flex;min-height:100vh;position:relative;z-index:2}
+.sidebar{width:var(--sb);position:fixed;top:0;left:0;height:100vh;background:rgba(6,6,20,.88);backdrop-filter:blur(24px);border-right:1px solid var(--rim);display:flex;flex-direction:column;z-index:100;transition:transform .35s cubic-bezier(.4,0,.2,1)}
+.main{margin-left:var(--sb);flex:1;min-height:100vh}
+
+/* ── SIDEBAR LOGO ── */
+.s-logo{padding:32px 24px 24px;border-bottom:1px solid var(--rim)}
+.logo-mark{display:flex;align-items:center;gap:12px}
+.logo-hex{width:40px;height:40px;background:var(--gv);border-radius:11px;display:grid;place-items:center;font-family:'JetBrains Mono',monospace;font-weight:600;font-size:13px;color:#fff;box-shadow:var(--shadow-v);position:relative}
+.logo-hex::after{content:'';position:absolute;inset:-2px;border-radius:13px;background:var(--gv);z-index:-1;opacity:.3;filter:blur(8px)}
+.logo-wordmark{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.logo-ver{font-family:'JetBrains Mono',monospace;font-size:9px;color:var(--snow3);letter-spacing:.12em;margin-top:1px}
+
+/* ── AI STATUS ── */
+.ai-status{margin:18px 16px;background:rgba(108,63,255,.08);border:1px solid rgba(108,63,255,.2);border-radius:var(--rs);padding:12px 14px;display:flex;align-items:center;gap:10px}
+.ai-dot{width:8px;height:8px;border-radius:50%;background:var(--em);animation:ai-pulse 2s ease infinite;flex-shrink:0}
+@keyframes ai-pulse{0%,100%{box-shadow:0 0 0 0 rgba(16,185,129,.5)}50%{box-shadow:0 0 0 6px transparent}}
+.ai-text{font-size:11px;color:var(--snow2);font-family:'JetBrains Mono',monospace}
+.ai-text strong{color:var(--em);display:block;font-size:10px;letter-spacing:.08em;text-transform:uppercase}
+
+/* ── NAV ── */
+.s-nav{flex:1;overflow-y:auto;padding:8px 10px}
+.s-nav::-webkit-scrollbar{width:3px}
+.s-nav::-webkit-scrollbar-thumb{background:var(--rim2);border-radius:99px}
+.nav-group-label{font-family:'JetBrains Mono',monospace;font-size:8.5px;color:var(--snow3);letter-spacing:.18em;text-transform:uppercase;padding:14px 10px 5px}
+.nav-btn{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:var(--rs);cursor:pointer;transition:all .2s;color:var(--snow2);font-size:13px;font-weight:500;position:relative;margin-bottom:1px;border:none;background:none;width:100%;text-align:left}
+.nav-btn:hover{background:var(--glass2);color:var(--snow)}
+.nav-btn.active{background:rgba(108,63,255,.12);color:var(--vl);border:1px solid rgba(108,63,255,.18)}
+.nav-btn.active .nav-ic{color:var(--vl)}
+.nav-ic{font-size:15px;width:20px;text-align:center;flex-shrink:0}
+.nav-pill{margin-left:auto;font-size:9px;background:rgba(108,63,255,.18);color:var(--vl);padding:2px 7px;border-radius:99px;font-family:'JetBrains Mono',monospace}
+.nav-hot{background:rgba(225,29,72,.18);color:var(--rose)}
+
+/* ── PROGRESS BAR ── */
+.s-progress{padding:14px 18px;margin:10px 12px;background:var(--glass);border:1px solid var(--rim);border-radius:var(--rs)}
+.sp-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px}
+.sp-label{font-size:10px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.sp-val{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.sp-track{height:3px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden}
+.sp-fill{height:100%;background:var(--gv);border-radius:99px;transition:width 1s ease}
+
+/* ── CLOCK ── */
+.s-clock{padding:14px 22px;border-top:1px solid var(--rim);text-align:center}
+.clock-num{font-family:'JetBrains Mono',monospace;font-size:22px;font-weight:500;color:var(--snow);letter-spacing:.05em}
+.clock-label{font-size:9px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-top:2px}
+
+/* ── HAMBURGER ── */
+.hamburger{display:none;position:fixed;top:18px;left:18px;z-index:200;width:42px;height:42px;background:rgba(6,6,20,.9);backdrop-filter:blur(10px);border:1px solid var(--rim);border-radius:11px;cursor:pointer;flex-direction:column;align-items:center;justify-content:center;gap:5px}
+.hamburger span{width:18px;height:1.5px;background:var(--snow);border-radius:1px;transition:all .3s}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:90;backdrop-filter:blur(6px)}
+
+/* ── SECTION ── */
+.section{display:none;padding:44px 52px;max-width:1500px}
+.section.active{display:block}
+.sec-tag{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--vl);letter-spacing:.18em;text-transform:uppercase;margin-bottom:10px;display:flex;align-items:center;gap:8px}
+.sec-tag::before{content:'';width:18px;height:1px;background:var(--vl)}
+.sec-h{font-family:'Syne',sans-serif;font-size:clamp(28px,4vw,48px);font-weight:800;line-height:1.05;letter-spacing:-.02em;margin-bottom:10px}
+.sec-sub{color:var(--snow2);font-size:15px;line-height:1.65;max-width:680px;margin-bottom:36px}
+
+/* ── GLASS CARD ── */
+.gcard{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:26px;transition:all .28s cubic-bezier(.4,0,.2,1)}
+.gcard:hover{border-color:var(--rim2);transform:translateY(-2px);box-shadow:var(--shadow-v)}
+
+/* ── BUTTONS ── */
+.btn{display:inline-flex;align-items:center;gap:8px;padding:12px 26px;border-radius:var(--rs);font-family:'Syne',sans-serif;font-weight:600;font-size:13.5px;cursor:pointer;transition:all .22s;border:none}
+.btn-v{background:var(--gv);color:#fff;box-shadow:var(--shadow-v)}
+.btn-v:hover{transform:translateY(-2px);box-shadow:0 0 80px rgba(108,63,255,.5)}
+.btn-g{background:var(--glass2);border:1px solid var(--rim);color:var(--snow)}
+.btn-g:hover{border-color:var(--vl);color:var(--vl);transform:translateY(-2px)}
+.btn-sm{padding:8px 16px;font-size:12px;border-radius:7px}
+
+/* ══════════════════════════════════════════
+   SECTION 1 — HERO DASHBOARD
+══════════════════════════════════════════ */
+#hero{display:block;padding:0}
+.hero-banner{padding:70px 52px 44px;position:relative;overflow:hidden;border-bottom:1px solid var(--rim)}
+.hero-eyebrow{display:flex;align-items:center;gap:10px;font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--cl);letter-spacing:.15em;text-transform:uppercase;margin-bottom:22px}
+.eyebrow-bar{width:24px;height:1px;background:var(--cl)}
+.hero-h1{font-family:'Syne',sans-serif;font-size:clamp(38px,6vw,80px);font-weight:800;line-height:1.02;letter-spacing:-.03em;margin-bottom:18px}
+.hero-h1 em{font-style:normal;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.hero-desc{color:var(--snow2);font-size:16px;line-height:1.7;max-width:580px;margin-bottom:36px}
+.hero-ctas{display:flex;gap:14px;flex-wrap:wrap}
+
+/* STAT GRID */
+.stat-strip{padding:32px 52px;display:grid;grid-template-columns:repeat(auto-fit,minmax(160px,1fr));gap:16px;border-bottom:1px solid var(--rim)}
+.stat-tile{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px 20px;position:relative;overflow:hidden;transition:all .3s}
+.stat-tile:hover{border-color:var(--rim2);box-shadow:var(--shadow-v)}
+.stat-tile::before{content:'';position:absolute;inset:0;background:var(--gv);opacity:0;transition:opacity .3s}
+.stat-tile:hover::before{opacity:.04}
+.st-label{font-family:'JetBrains Mono',monospace;font-size:9.5px;color:var(--snow3);letter-spacing:.12em;text-transform:uppercase;margin-bottom:10px}
+.st-val{font-family:'Syne',sans-serif;font-size:clamp(28px,3vw,38px);font-weight:800;line-height:1;margin-bottom:4px}
+.st-val.gv{background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.st-val.gc{background:var(--gc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.st-val.gp{background:var(--gp);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.st-val.gg{color:var(--em)}
+.st-sub{font-size:11px;color:var(--snow3)}
+.st-bar{height:3px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden;margin-top:12px}
+.st-bar-fill{height:100%;border-radius:99px;transition:width 1.8s cubic-bezier(.4,0,.2,1)}
+
+/* ══════════════════════════════════════════
+   SECTION 2 — AI INTELLIGENCE ENGINE
+══════════════════════════════════════════ */
+.ai-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:18px;margin-bottom:28px}
+.ai-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:24px;transition:all .28s;position:relative;overflow:hidden}
+.ai-card:hover{border-color:var(--rim2);transform:translateY(-3px);box-shadow:var(--shadow-v)}
+.ai-card-glow{position:absolute;width:200px;height:200px;border-radius:50%;filter:blur(80px);top:-60px;right:-60px;opacity:.15;pointer-events:none}
+.ai-tag{display:inline-flex;align-items:center;gap:6px;font-family:'JetBrains Mono',monospace;font-size:9px;letter-spacing:.1em;text-transform:uppercase;padding:3px 10px;border-radius:99px;margin-bottom:14px}
+.ai-tag-hot{background:rgba(225,29,72,.1);border:1px solid rgba(225,29,72,.25);color:var(--rose)}
+.ai-tag-high{background:rgba(217,119,6,.1);border:1px solid rgba(217,119,6,.25);color:var(--gold)}
+.ai-tag-med{background:rgba(16,185,129,.1);border:1px solid rgba(16,185,129,.25);color:var(--em)}
+.ai-topic{font-family:'Syne',sans-serif;font-size:17px;font-weight:700;margin-bottom:6px}
+.ai-meta{display:flex;gap:10px;flex-wrap:wrap;margin:14px 0}
+.ai-chip{font-size:11px;padding:4px 11px;border-radius:7px;font-family:'JetBrains Mono',monospace}
+.chip-freq{background:rgba(108,63,255,.1);color:var(--vl)}
+.chip-marks{background:rgba(37,99,235,.1);color:var(--bl)}
+.chip-diff{background:rgba(6,182,212,.1);color:var(--cl)}
+.ai-prob-row{display:flex;align-items:center;justify-content:space-between;margin-top:14px}
+.ai-prob-label{font-size:11px;color:var(--snow3);font-family:'JetBrains Mono',monospace}
+.ai-prob-val{font-family:'Syne',sans-serif;font-size:20px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ai-bar{height:5px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden;margin-top:8px}
+.ai-bar-fill{height:100%;border-radius:99px;transition:width 1.5s ease}
+.trend-row{display:flex;align-items:center;gap:6px;margin-top:10px;font-size:11px;color:var(--snow3)}
+.trend-up{color:var(--em)}
+
+/* ══════════════════════════════════════════
+   SECTION 3 — SESSIONS
+══════════════════════════════════════════ */
+.sessions-list{display:flex;flex-direction:column;gap:14px}
+.sess-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);overflow:hidden;transition:all .28s}
+.sess-card:hover{border-color:var(--rim2)}
+.sess-header{display:flex;align-items:center;gap:16px;padding:22px 26px;cursor:pointer;user-select:none}
+.sess-badge{width:50px;height:50px;border-radius:13px;display:grid;place-items:center;font-family:'Syne',sans-serif;font-weight:800;font-size:19px;flex-shrink:0;position:relative}
+.sess-badge::after{content:'';position:absolute;inset:-3px;border-radius:16px;opacity:.25;filter:blur(10px)}
+.sb1{background:rgba(108,63,255,.15);color:var(--vl);border:1px solid rgba(108,63,255,.3)}.sb1::after{background:var(--v)}
+.sb2{background:rgba(37,99,235,.15);color:var(--bl);border:1px solid rgba(37,99,235,.3)}.sb2::after{background:var(--b)}
+.sb3{background:rgba(6,182,212,.15);color:var(--cl);border:1px solid rgba(6,182,212,.3)}.sb3::after{background:var(--c)}
+.sb4{background:rgba(16,185,129,.15);color:var(--em);border:1px solid rgba(16,185,129,.3)}.sb4::after{background:var(--em)}
+.sb5{background:rgba(217,119,6,.15);color:var(--gold);border:1px solid rgba(217,119,6,.3)}.sb5::after{background:var(--gold)}
+.sb6{background:rgba(225,29,72,.15);color:var(--rose);border:1px solid rgba(225,29,72,.3)}.sb6::after{background:var(--rose)}
+.sess-info{flex:1}
+.sess-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:5px}
+.sess-chips{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.sc-chip{font-size:10px;padding:3px 9px;border-radius:99px;font-family:'JetBrains Mono',monospace}
+.scc-time{background:rgba(255,255,255,.05);color:var(--snow2)}
+.scc-prob{background:rgba(225,29,72,.1);color:var(--rose)}
+.scc-marks{background:rgba(108,63,255,.1);color:var(--vl)}
+.sess-ring{position:relative;width:46px;height:46px;flex-shrink:0}
+.sess-ring svg{transform:rotate(-90deg)}
+.ring-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:3}
+.ring-fg{fill:none;stroke-width:3;stroke-linecap:round;transition:stroke-dashoffset 1.2s ease}
+.ring-label{position:absolute;inset:0;display:grid;place-items:center;font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--snow3)}
+.sess-chevron{font-size:16px;color:var(--snow3);transition:transform .3s;flex-shrink:0}
+.sess-card.open .sess-chevron{transform:rotate(180deg)}
+.sess-body{display:none;padding:0 26px 26px;border-top:1px solid var(--rim)}
+.sess-card.open .sess-body{display:block}
+.sess-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px;margin-top:22px}
+.sess-block{background:rgba(0,0,0,.25);border:1px solid var(--rim);border-radius:var(--rs);padding:18px}
+.sb-title{font-size:9.5px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.12em;text-transform:uppercase;margin-bottom:12px}
+.sess-list{list-style:none}
+.sess-list li{display:flex;gap:9px;align-items:flex-start;padding:6px 0;font-size:13px;color:var(--snow2);border-bottom:1px solid rgba(255,255,255,.025)}
+.sess-list li:last-child{border:none}
+.sess-list li::before{content:'›';color:var(--vl);font-size:15px;line-height:1.2;flex-shrink:0}
+.trick-box{padding:9px 12px;background:rgba(108,63,255,.06);border-left:3px solid var(--vl);border-radius:0 7px 7px 0;font-size:12.5px;color:var(--snow2);margin-bottom:8px;line-height:1.4}
+.trap-box{padding:9px 12px;background:rgba(225,29,72,.04);border-left:3px solid var(--rose);border-radius:0 7px 7px 0;font-size:12.5px;color:rgba(255,255,255,.6);margin-bottom:8px;line-height:1.4}
+.checklist-wrap{display:flex;flex-direction:column;gap:2px}
+.cl-item{display:flex;align-items:center;gap:9px;padding:7px 4px;font-size:12.5px;color:var(--snow2);cursor:pointer;border-radius:6px;transition:background .15s}
+.cl-item:hover{background:var(--glass2)}
+.cl-item input{width:15px;height:15px;accent-color:var(--vl);cursor:pointer}
+.cl-item.done{color:var(--snow3);text-decoration:line-through}
+.pyq-badge{display:inline-flex;align-items:center;gap:4px;font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 9px;border-radius:99px;background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.2)}
+.sess-complete-btn{width:100%;margin-top:20px;padding:13px;background:var(--gv);border:none;border-radius:var(--rs);color:#fff;font-family:'Syne',sans-serif;font-weight:700;font-size:14px;cursor:pointer;transition:all .3s;box-shadow:var(--shadow-v)}
+.sess-complete-btn:hover{transform:translateY(-2px);box-shadow:0 0 80px rgba(108,63,255,.5)}
+.sess-complete-btn.done{background:var(--gg);box-shadow:0 0 40px rgba(16,185,129,.3)}
+
+/* ══════════════════════════════════════════
+   SECTION 4 — FORMULA ENGINE
+══════════════════════════════════════════ */
+.formula-bar{display:flex;gap:12px;margin-bottom:24px;flex-wrap:wrap;align-items:center}
+.fbar-search{flex:1;min-width:200px;display:flex;align-items:center;gap:10px;background:var(--glass);border:1px solid var(--rim);border-radius:var(--rs);padding:11px 16px}
+.fbar-search input{flex:1;background:none;border:none;color:var(--snow);font-family:'Outfit',sans-serif;font-size:14px;outline:none}
+.fbar-search input::placeholder{color:var(--snow3)}
+.pills{display:flex;gap:7px;flex-wrap:wrap}
+.pill{padding:8px 15px;border-radius:99px;font-size:11.5px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;border:1px solid var(--rim);color:var(--snow2);background:var(--glass)}
+.pill.on,.pill:hover{background:rgba(108,63,255,.15);border-color:rgba(108,63,255,.35);color:var(--vl)}
+.fgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:16px}
+.fcrd{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px;transition:all .28s;position:relative}
+.fcrd:hover{border-color:var(--rim2);transform:translateY(-2px);box-shadow:var(--shadow-v)}
+.fcrd-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px}
+.f-topic{font-size:9.5px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-transform:uppercase}
+.f-fav{background:none;border:none;cursor:pointer;font-size:18px;color:var(--snow3);transition:all .2s;padding:0}
+.f-fav.on,.f-fav:hover{color:var(--gold)}
+.f-name{font-family:'Syne',sans-serif;font-size:14.5px;font-weight:700;margin-bottom:12px}
+.f-display{background:rgba(0,0,0,.35);border-radius:10px;padding:18px;text-align:center;min-height:64px;display:flex;align-items:center;justify-content:center;border:1px solid rgba(255,255,255,.04);margin-bottom:12px}
+.f-desc{font-size:12.5px;color:var(--snow2);line-height:1.55;margin-bottom:14px}
+.f-btns{display:flex;gap:7px}
+.f-btn{padding:6px 13px;background:var(--glass2);border:1px solid var(--rim);border-radius:6px;font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--snow2);cursor:pointer;transition:all .2s}
+.f-btn:hover{border-color:var(--cl);color:var(--cl)}
+
+/* ══════════════════════════════════════════
+   SECTION 5 — PYQ ANALYZER
+══════════════════════════════════════════ */
+.pyq-cats{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:28px}
+.pyq-cat{padding:10px 20px;border-radius:99px;font-size:12px;font-family:'Syne',sans-serif;font-weight:600;cursor:pointer;transition:all .22s;border:1px solid var(--rim);color:var(--snow2);background:var(--glass)}
+.pyq-cat.on{background:var(--gv);border:none;color:#fff;box-shadow:var(--shadow-v)}
+.pyq-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.pyq-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px;transition:all .28s;position:relative;overflow:hidden}
+.pyq-card:hover{border-color:var(--rim2);transform:translateY(-2px)}
+.pyq-freq{position:absolute;top:18px;right:18px;font-family:'Syne',sans-serif;font-size:28px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;opacity:.6}
+.pyq-badges{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.pyq-b{font-size:9.5px;font-family:'JetBrains Mono',monospace;padding:3px 9px;border-radius:99px}
+.pyq-b-rep{background:rgba(225,29,72,.1);color:var(--rose);border:1px solid rgba(225,29,72,.2)}
+.pyq-b-imp{background:rgba(108,63,255,.1);color:var(--vl);border:1px solid rgba(108,63,255,.2)}
+.pyq-b-exp{background:rgba(16,185,129,.1);color:var(--em);border:1px solid rgba(16,185,129,.2)}
+.pyq-b-conf{background:rgba(217,119,6,.1);color:var(--gold);border:1px solid rgba(217,119,6,.2)}
+.pyq-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:8px;padding-right:44px}
+.pyq-desc{font-size:12.5px;color:var(--snow2);line-height:1.5;margin-bottom:14px}
+.pyq-stats{display:flex;gap:12px}
+.pyq-stat{font-size:11px;color:var(--snow3);font-family:'JetBrains Mono',monospace}
+.pyq-stat strong{color:var(--snow);display:block;font-size:13px}
+
+/* ══════════════════════════════════════════
+   SECTION 6 — MOST REPEATED PROBLEMS
+══════════════════════════════════════════ */
+.rep-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:16px}
+.rep-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:24px;transition:all .28s;position:relative;overflow:hidden}
+.rep-card:hover{border-color:var(--rim2);transform:translateY(-3px);box-shadow:var(--shadow-v)}
+.rep-num{font-family:'Syne',sans-serif;font-size:11px;font-weight:800;color:var(--snow3);margin-bottom:10px;font-family:'JetBrains Mono',monospace;letter-spacing:.08em}
+.rep-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:8px;line-height:1.3}
+.rep-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:12px}
+.rep-trick{font-size:12px;color:var(--cl);background:rgba(6,182,212,.06);padding:8px 12px;border-radius:7px;border-left:2px solid var(--cl);margin-bottom:14px;line-height:1.45}
+.rep-status-row{display:flex;gap:8px}
+.rep-btn{flex:1;padding:8px;border-radius:7px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;border:1px solid var(--rim);background:var(--glass);color:var(--snow2)}
+.rep-btn:hover,.rep-btn.solved{border-color:var(--em);color:var(--em);background:rgba(16,185,129,.08)}
+.rep-btn.revisit{border-color:var(--gold);color:var(--gold);background:rgba(217,119,6,.08)}
+.rep-bar{height:4px;background:rgba(255,255,255,.05);border-radius:99px;overflow:hidden;margin-bottom:12px}
+.rep-bar-fill{height:100%;border-radius:99px}
+
+/* ══════════════════════════════════════════
+   SECTION 7 — EXPECTED QUESTIONS
+══════════════════════════════════════════ */
+.eq-grid{display:flex;flex-direction:column;gap:14px}
+.eq-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px 26px;display:grid;grid-template-columns:auto 1fr auto;gap:20px;align-items:center;transition:all .28s}
+.eq-card:hover{border-color:var(--rim2);transform:translateX(4px)}
+.eq-conf{width:56px;height:56px;border-radius:14px;display:flex;align-items:center;justify-content:center;flex-direction:column;flex-shrink:0;background:rgba(108,63,255,.1);border:1px solid rgba(108,63,255,.2)}
+.eq-conf-val{font-family:'Syne',sans-serif;font-size:17px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.eq-conf-label{font-size:8.5px;font-family:'JetBrains Mono',monospace;color:var(--snow3)}
+.eq-type{font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--cl);letter-spacing:.1em;text-transform:uppercase;margin-bottom:5px}
+.eq-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:5px}
+.eq-desc{font-size:12.5px;color:var(--snow2)}
+.eq-marks{text-align:right;flex-shrink:0}
+.eq-marks-num{font-family:'Syne',sans-serif;font-size:22px;font-weight:800;color:var(--vl)}
+.eq-marks-label{font-size:9px;color:var(--snow3);font-family:'JetBrains Mono',monospace}
+
+/* ══════════════════════════════════════════
+   SECTION 8 — VIDEO HUB
+══════════════════════════════════════════ */
+.vhub-cats{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:24px}
+.vhub-cat{padding:9px 18px;border-radius:99px;font-size:11.5px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .22s;border:1px solid var(--rim);color:var(--snow2);background:var(--glass)}
+.vhub-cat.on{background:rgba(108,63,255,.15);border-color:rgba(108,63,255,.35);color:var(--vl)}
+.vid-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:18px}
+.vid-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);overflow:hidden;transition:all .28s;cursor:pointer}
+.vid-card:hover{border-color:var(--rim2);transform:translateY(-4px);box-shadow:var(--shadow-b)}
+.vid-thumb{width:100%;height:158px;object-fit:cover;background:linear-gradient(135deg,var(--ink2),var(--ink3));display:flex;align-items:center;justify-content:center;position:relative;overflow:hidden}
+.vid-thumb-bg{position:absolute;inset:0;display:flex;align-items:center;justify-content:center}
+.vid-play{width:52px;height:52px;border-radius:50%;background:rgba(108,63,255,.85);display:grid;place-items:center;font-size:20px;backdrop-filter:blur(4px);border:1px solid rgba(255,255,255,.2);transition:transform .2s}
+.vid-card:hover .vid-play{transform:scale(1.1)}
+.vid-dur{position:absolute;bottom:10px;right:10px;background:rgba(0,0,0,.75);font-family:'JetBrains Mono',monospace;font-size:10px;padding:3px 8px;border-radius:5px}
+.vid-topic-tag{position:absolute;top:10px;left:10px;font-family:'JetBrains Mono',monospace;font-size:9px;padding:3px 9px;border-radius:99px;background:rgba(108,63,255,.8);color:#fff}
+.vid-body{padding:16px}
+.vid-creator{font-size:10px;color:var(--cl);font-family:'JetBrains Mono',monospace;letter-spacing:.06em;text-transform:uppercase;margin-bottom:5px}
+.vid-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;line-height:1.35;margin-bottom:8px}
+.vid-tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:10px}
+.vid-tag-diff{font-size:9.5px;font-family:'JetBrains Mono',monospace;padding:2px 8px;border-radius:99px}
+.vt-easy{background:rgba(16,185,129,.1);color:var(--em)}
+.vt-med{background:rgba(217,119,6,.1);color:var(--gold)}
+.vt-hard{background:rgba(225,29,72,.1);color:var(--rose)}
+.vt-exam{background:rgba(108,63,255,.1);color:var(--vl)}
+.vid-actions{display:flex;gap:8px}
+.vid-btn{flex:1;padding:8px;border-radius:7px;font-size:11px;font-family:'JetBrains Mono',monospace;cursor:pointer;transition:all .2s;text-align:center;text-decoration:none;display:block}
+.vid-btn-primary{background:var(--gv);color:#fff;border:none}
+.vid-btn-secondary{background:var(--glass2);border:1px solid var(--rim);color:var(--snow2)}
+.vid-btn-secondary:hover{border-color:var(--vl);color:var(--vl)}
+.vid-watched{border-color:var(--em)!important;color:var(--em)!important;background:rgba(16,185,129,.08)!important}
+
+/* ══════════════════════════════════════════
+   SECTION 9 — EXAM MODE
+══════════════════════════════════════════ */
+.exam-banner{text-align:center;padding:64px 40px 48px;border-bottom:1px solid var(--rim);position:relative;overflow:hidden}
+.exam-live{display:inline-flex;align-items:center;gap:8px;background:rgba(225,29,72,.08);border:1px solid rgba(225,29,72,.25);border-radius:99px;padding:6px 16px;font-size:10px;font-family:'JetBrains Mono',monospace;color:var(--rose);margin-bottom:22px;letter-spacing:.1em;text-transform:uppercase}
+.exam-timer{font-family:'Syne',sans-serif;font-size:clamp(72px,12vw,120px);font-weight:800;letter-spacing:-.04em;line-height:1;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin:20px 0}
+.exam-timer-btns{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+.exam-sections{padding:40px 52px;display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.exam-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:24px}
+.ec-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px}
+.flashcard-wrap{background:rgba(0,0,0,.3);border-radius:var(--rs);padding:24px;min-height:130px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .35s;border:1px solid rgba(255,255,255,.04);text-align:center;perspective:600px}
+.flashcard-wrap:hover{border-color:var(--vl)}
+.fc-q{font-family:'Syne',sans-serif;font-size:15px;font-weight:600}
+.fc-a{font-family:'JetBrains Mono',monospace;font-size:13px;color:var(--cl);margin-top:10px;display:none}
+.flashcard-wrap.flipped .fc-q{display:none}
+.flashcard-wrap.flipped .fc-a{display:block}
+.fc-nav{display:flex;gap:8px;margin-top:12px}
+.pom-dial{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;text-align:center;margin:14px 0;background:var(--gc);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.pom-mode{text-align:center;font-size:10.5px;font-family:'JetBrains Mono',monospace;color:var(--snow3);margin-bottom:14px;letter-spacing:.1em;text-transform:uppercase}
+.pom-ctrls{display:flex;gap:8px;justify-content:center;flex-wrap:wrap}
+.pom-crc{display:grid;grid-template-columns:repeat(4,1fr);gap:5px;margin-top:14px}
+.pcrc{height:8px;border-radius:99px;background:rgba(255,255,255,.05);border:1px solid var(--rim);transition:all .3s}
+.pcrc.done{background:var(--v)}
+.panic-ul{list-style:none}
+.panic-li{display:flex;align-items:flex-start;gap:10px;padding:9px 0;border-bottom:1px solid var(--rim);font-size:13px;color:var(--snow2)}
+.panic-n{width:22px;height:22px;border-radius:50%;background:rgba(225,29,72,.12);color:var(--rose);display:grid;place-items:center;font-size:10.5px;font-family:'JetBrains Mono',monospace;flex-shrink:0}
+.rapid-item{padding:8px 12px;margin-bottom:7px;background:rgba(108,63,255,.05);border-left:2px solid var(--vl);border-radius:0 7px 7px 0;font-size:11.5px;color:var(--snow2);font-family:'JetBrains Mono',monospace;line-height:1.45}
+
+/* ══════════════════════════════════════════
+   SECTION 10 — ANALYTICS
+══════════════════════════════════════════ */
+.ana-rings{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:16px;margin-bottom:24px}
+.ana-ring-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:24px;text-align:center;transition:all .28s}
+.ana-ring-card:hover{border-color:var(--rim2);transform:translateY(-2px)}
+.ana-ring-wrap{position:relative;width:130px;height:130px;margin:0 auto 14px}
+.ana-ring-wrap svg{transform:rotate(-90deg)}
+.arc-bg{fill:none;stroke:rgba(255,255,255,.05);stroke-width:10}
+.arc-fg{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dasharray 1.5s ease}
+.arc-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.arc-val{font-family:'Syne',sans-serif;font-size:26px;font-weight:800}
+.arc-lbl{font-size:9px;color:var(--snow3);font-family:'JetBrains Mono',monospace;margin-top:2px}
+.arc-card-title{font-size:13.5px;font-weight:600}
+.heat-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(240px,1fr));gap:16px}
+.heat-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:24px}
+.heat-title{font-family:'Syne',sans-serif;font-size:14px;font-weight:700;margin-bottom:16px}
+.heat-row{display:flex;align-items:center;gap:12px;padding:10px 0;border-bottom:1px solid rgba(255,255,255,.03)}
+.heat-row:last-child{border:none}
+.heat-name{font-size:13px;flex:1}
+.heat-track{flex:2;height:5px;background:rgba(255,255,255,.04);border-radius:99px;overflow:hidden}
+.heat-fill{height:100%;border-radius:99px;transition:width 1.8s ease}
+.heat-pct{font-family:'JetBrains Mono',monospace;font-size:11px;color:var(--snow3);min-width:36px;text-align:right}
+
+/* ══════════════════════════════════════════
+   SECTION 11 — PRODUCTIVITY
+══════════════════════════════════════════ */
+.prod-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr));gap:18px}
+.prod-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:26px}
+.prod-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:18px;display:flex;align-items:center;gap:8px}
+.goal-inp{width:100%;background:rgba(0,0,0,.3);border:1px solid var(--rim);border-radius:7px;padding:10px 14px;color:var(--snow);font-family:'Outfit',sans-serif;font-size:13.5px;outline:none;margin-bottom:10px;transition:border-color .2s}
+.goal-inp:focus{border-color:var(--vl)}
+.goal-item{display:flex;align-items:center;gap:9px;padding:8px 0;border-bottom:1px solid rgba(255,255,255,.03);font-size:13px;color:var(--snow2)}
+.goal-item input[type=checkbox]{accent-color:var(--vl)}
+.streak-big{font-family:'Syne',sans-serif;font-size:64px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1;text-align:center}
+.streak-sub{font-size:10px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;text-align:center;margin-top:4px}
+.streak-cal{display:grid;grid-template-columns:repeat(7,1fr);gap:4px;margin-top:16px}
+.scal-day{height:24px;border-radius:4px;background:rgba(255,255,255,.04)}
+.scal-day.hit{background:var(--vl)}
+.scal-day.today{background:var(--cl);box-shadow:0 0 14px rgba(6,182,212,.4)}
+
+/* ══════════════════════════════════════════
+   SECTION 12 — MISTAKES
+══════════════════════════════════════════ */
+.mis-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:16px}
+.mis-card{background:rgba(225,29,72,.03);border:1px solid rgba(225,29,72,.14);border-radius:var(--r);padding:24px;transition:all .28s}
+.mis-card:hover{border-color:rgba(225,29,72,.35);background:rgba(225,29,72,.06);box-shadow:0 0 40px rgba(225,29,72,.08)}
+.mis-trap{display:inline-flex;align-items:center;gap:6px;background:rgba(225,29,72,.1);border:1px solid rgba(225,29,72,.25);border-radius:6px;padding:3px 10px;font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--rose);margin-bottom:12px;letter-spacing:.06em;text-transform:uppercase}
+.mis-title{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;color:var(--rose);margin-bottom:10px}
+.mis-wrong{font-size:12.5px;color:var(--snow2);padding:10px 12px;background:rgba(225,29,72,.05);border-radius:7px;border-left:3px solid var(--rose);margin-bottom:9px;line-height:1.5}
+.mis-right{font-size:12.5px;color:var(--em);padding:10px 12px;background:rgba(16,185,129,.05);border-radius:7px;border-left:3px solid var(--em);line-height:1.5}
+
+/* ══════════════════════════════════════════
+   SECTION 13 — TOP 15
+══════════════════════════════════════════ */
+.t15-list{display:flex;flex-direction:column;gap:12px}
+.t15-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px 26px;display:grid;grid-template-columns:60px 1fr auto;gap:18px;align-items:center;transition:all .28s}
+.t15-card:hover{border-color:var(--rim2);transform:translateX(5px);box-shadow:var(--shadow-v)}
+.t15-rank{font-family:'Syne',sans-serif;font-size:32px;font-weight:800;text-align:center}
+.r1{background:linear-gradient(135deg,#ffd700,#ff8c00);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.r2{background:linear-gradient(135deg,#c0c0c0,#909090);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.r3{background:linear-gradient(135deg,#cd7f32,#b8651a);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.r4plus{color:var(--snow3)}
+.t15-info .t15-topic{font-family:'Syne',sans-serif;font-size:16px;font-weight:700;margin-bottom:4px}
+.t15-info .t15-why{font-size:12.5px;color:var(--snow2);margin-bottom:8px;line-height:1.4}
+.t15-info .t15-strat{font-size:11.5px;color:var(--cl);background:rgba(6,182,212,.06);padding:6px 10px;border-radius:6px;border-left:2px solid var(--cl)}
+.t15-right{text-align:right}
+.t15-marks{font-family:'Syne',sans-serif;font-size:24px;font-weight:800;color:var(--vl)}
+.t15-m-label{font-size:9.5px;color:var(--snow3);font-family:'JetBrains Mono',monospace}
+
+/* ══════════════════════════════════════════
+   SECTION 14 — REVISION ENGINE
+══════════════════════════════════════════ */
+.rev-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(260px,1fr));gap:16px}
+.rev-card{background:var(--glass);border:1px solid var(--rim);border-radius:var(--r);padding:22px;transition:all .28s}
+.rev-card:hover{border-color:var(--rim2);transform:translateY(-2px)}
+.rev-phase{font-size:9.5px;font-family:'JetBrains Mono',monospace;color:var(--cl);letter-spacing:.12em;text-transform:uppercase;margin-bottom:8px}
+.rev-title{font-family:'Syne',sans-serif;font-size:15px;font-weight:700;margin-bottom:12px}
+.rev-list{list-style:none;display:flex;flex-direction:column;gap:5px}
+.rev-item{font-size:12.5px;color:var(--snow2);padding:7px 10px;background:rgba(255,255,255,.02);border-radius:6px;border-left:2px solid var(--vl)}
+
+/* ══════════════════════════════════════════
+   SECTION 15 — FOCUS MODE
+══════════════════════════════════════════ */
+.focus-hero{min-height:70vh;display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:60px 40px;border-bottom:1px solid var(--rim)}
+.focus-ring{width:260px;height:260px;position:relative;margin:0 auto 40px}
+.focus-ring svg{transform:rotate(-90deg)}
+.focus-ring-bg{fill:none;stroke:rgba(255,255,255,.04);stroke-width:12}
+.focus-ring-fg{fill:none;stroke:url(#focus-grad);stroke-width:12;stroke-linecap:round;transition:stroke-dasharray 1s ease}
+.focus-center{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.focus-timer{font-family:'Syne',sans-serif;font-size:52px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;line-height:1}
+.focus-sub-label{font-size:11px;color:var(--snow3);font-family:'JetBrains Mono',monospace;margin-top:6px;letter-spacing:.1em}
+.focus-quote{font-family:'Syne',sans-serif;font-size:clamp(18px,3vw,28px);font-weight:700;line-height:1.3;max-width:500px;margin:0 auto 28px;opacity:.85}
+.focus-ctas{display:flex;gap:12px;justify-content:center;flex-wrap:wrap}
+
+/* ── SCROLL REVEAL ── */
+.reveal{opacity:0;transform:translateY(22px);transition:all .6s cubic-bezier(.4,0,.2,1)}
+.reveal.in{opacity:1;transform:translateY(0)}
+
+/* ── TOAST ── */
+#toasts{position:fixed;bottom:24px;right:24px;z-index:1000;display:flex;flex-direction:column;gap:8px}
+.toast{background:rgba(6,6,20,.96);backdrop-filter:blur(20px);border:1px solid var(--rim2);border-radius:var(--rs);padding:13px 18px;font-size:13px;color:var(--snow);min-width:270px;display:flex;align-items:center;gap:9px;animation:tslide .3s ease;box-shadow:var(--shadow-v)}
+@keyframes tslide{from{transform:translateX(110%);opacity:0}to{transform:translateX(0);opacity:1}}
+
+/* ── CONFETTI ── */
+.cfp{position:fixed;pointer-events:none;z-index:9000;animation:cf-fall 2.8s ease-in forwards}
+@keyframes cf-fall{0%{transform:translateY(-20px) rotate(0deg);opacity:1}100%{transform:translateY(100vh) rotate(720deg);opacity:0}}
+
+/* ── LOADING SCREEN ── */
+#loader{position:fixed;inset:0;background:var(--ink);z-index:9990;display:flex;flex-direction:column;align-items:center;justify-content:center;transition:opacity .6s ease}
+#loader.gone{opacity:0;pointer-events:none}
+.loader-logo{font-family:'Syne',sans-serif;font-size:48px;font-weight:800;background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:24px;animation:logo-in 1s ease}
+@keyframes logo-in{from{opacity:0;transform:scale(.8)}to{opacity:1;transform:scale(1)}}
+.loader-bar-wrap{width:260px;height:3px;background:rgba(255,255,255,.06);border-radius:99px;overflow:hidden}
+.loader-bar{height:100%;background:var(--gv);width:0%;animation:load-fill 1.8s ease forwards;border-radius:99px}
+@keyframes load-fill{to{width:100%}}
+.loader-text{font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--snow3);letter-spacing:.12em;margin-top:14px;animation:blink 1.2s ease infinite}
+@keyframes blink{0%,100%{opacity:.4}50%{opacity:1}}
+
+/* ── SCROLLBAR ── */
+::-webkit-scrollbar{width:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:rgba(108,63,255,.3);border-radius:99px}
+
+/* ── KATEX ── */
+.katex{color:var(--snow)!important;font-size:1.05em!important}
+
+/* ── RESPONSIVE ── */
+@media(max-width:960px){
+  .sidebar{transform:translateX(-100%)}
+  .sidebar.open{transform:translateX(0)}
+  .main{margin-left:0}
+  .hamburger{display:flex}
+  .overlay{display:block;opacity:0;pointer-events:none;transition:opacity .3s}
+  .overlay.open{opacity:1;pointer-events:auto}
+  .section{padding:28px 22px}
+  .hero-banner,.exam-sections,.stat-strip{padding-left:22px;padding-right:22px}
+  .exam-sections{padding:24px 22px}
+  .eq-card{grid-template-columns:auto 1fr}
+  .t15-card{grid-template-columns:44px 1fr}
+  .t15-right{display:none}
+  .cursor,.cursor-ring{display:none}
+  body{cursor:auto}
+}
+@media(max-width:560px){
+  .hero-h1{font-size:30px}
+  .exam-timer{font-size:60px}
+  .streak-big{font-size:48px}
+}
+</style>
+</head>
+<body>
+
+<!-- CUSTOM CURSOR -->
+<div class="cursor" id="cursor"></div>
+<div class="cursor-ring" id="cursor-ring"></div>
+
+<!-- LOADING SCREEN -->
+<div id="loader">
+  <div class="loader-logo">MATHX</div>
+  <div class="loader-bar-wrap"><div class="loader-bar"></div></div>
+  <div class="loader-text">INITIALIZING AI ENGINE...</div>
+</div>
+
+<!-- AMBIENT -->
+<div class="ambient">
+  <div class="blob b1"></div>
+  <div class="blob b2"></div>
+  <div class="blob b3"></div>
+</div>
+
+<!-- HAMBURGER -->
+<button class="hamburger" onclick="toggleSidebar()" aria-label="Menu">
+  <span></span><span></span><span></span>
+</button>
+<div class="overlay" onclick="toggleSidebar()"></div>
+
+<!-- APP -->
+<div class="app">
+
+<!-- ═══ SIDEBAR ═══ -->
+<nav class="sidebar" id="sidebar">
+  <div class="s-logo">
+    <div class="logo-mark">
+      <div class="logo-hex">∇²</div>
+      <div>
+        <div class="logo-wordmark">MATHX</div>
+        <div class="logo-ver">AI EXAM INTELLIGENCE v2</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="ai-status">
+    <div class="ai-dot"></div>
+    <div class="ai-text"><strong>AI Engine Active</strong>Analyzing exam patterns...</div>
+  </div>
+
+  <div class="s-progress">
+    <div class="sp-row">
+      <span class="sp-label">Readiness</span>
+      <span class="sp-val" id="sp-val">0%</span>
+    </div>
+    <div class="sp-track"><div class="sp-fill" id="sp-fill" style="width:0%"></div></div>
+  </div>
+
+  <div class="s-nav">
+    <div class="nav-group-label">Core</div>
+    <button class="nav-btn active" onclick="nav('hero',this)"><span class="nav-ic">⚡</span>Dashboard</button>
+    <button class="nav-btn" onclick="nav('ai',this)"><span class="nav-ic">🧠</span>AI Intelligence<span class="nav-pill nav-hot">AI</span></button>
+    <button class="nav-btn" onclick="nav('sessions',this)"><span class="nav-ic">📚</span>15-Hr Roadmap<span class="nav-pill" id="sess-pill">0/6</span></button>
+
+    <div class="nav-group-label">Analysis</div>
+    <button class="nav-btn" onclick="nav('formulas',this)"><span class="nav-ic">🧮</span>Formula Engine</button>
+    <button class="nav-btn" onclick="nav('pyq',this)"><span class="nav-ic">📊</span>PYQ Analyzer</button>
+    <button class="nav-btn" onclick="nav('repeated',this)"><span class="nav-ic">🔁</span>Most Repeated</button>
+    <button class="nav-btn" onclick="nav('expected',this)"><span class="nav-ic">🎯</span>Expected Qs<span class="nav-pill nav-hot">HOT</span></button>
+
+    <div class="nav-group-label">Resources</div>
+    <button class="nav-btn" onclick="nav('videos',this)"><span class="nav-ic">🎥</span>Video Hub</button>
+    <button class="nav-btn" onclick="nav('top15',this)"><span class="nav-ic">🏆</span>Top 15 Types</button>
+    <button class="nav-btn" onclick="nav('mistakes',this)"><span class="nav-ic">⚠️</span>Mistakes</button>
+
+    <div class="nav-group-label">Performance</div>
+    <button class="nav-btn" onclick="nav('exam',this)"><span class="nav-ic">🌙</span>Exam Mode</button>
+    <button class="nav-btn" onclick="nav('analytics',this)"><span class="nav-ic">📈</span>Analytics</button>
+    <button class="nav-btn" onclick="nav('revision',this)"><span class="nav-ic">🔄</span>Revision Engine</button>
+    <button class="nav-btn" onclick="nav('productivity',this)"><span class="nav-ic">🛠</span>Productivity</button>
+    <button class="nav-btn" onclick="nav('focus',this)"><span class="nav-ic">🔵</span>Focus Mode</button>
+  </div>
+
+  <div class="s-clock">
+    <div class="clock-num" id="clock">--:--:--</div>
+    <div class="clock-label">LIVE</div>
+  </div>
+</nav>
+
+<!-- ═══ MAIN ═══ -->
+<main class="main">
+
+<!-- ──────────────── HERO ──────────────── -->
+<div class="section active" id="hero">
+  <div class="hero-banner">
+    <div class="hero-eyebrow"><div class="eyebrow-bar"></div>AI-Powered Exam Intelligence System</div>
+    <h1 class="hero-h1">Master <em>Linear Algebra</em><br>& <em>Differential Equations</em><br>in 15 Hours.</h1>
+    <p class="hero-desc">A Pareto-optimized AI engine that analyzes exam patterns, predicts questions, and guides you to maximum marks with minimum effort.</p>
+    <div class="hero-ctas">
+      <button class="btn btn-v" onclick="nav('sessions',document.querySelectorAll('.nav-btn')[2])">Start 15-Hr Roadmap →</button>
+      <button class="btn btn-g" onclick="nav('ai',document.querySelectorAll('.nav-btn')[1])">🧠 AI Engine</button>
+      <button class="btn btn-g" onclick="nav('exam',document.querySelectorAll('.nav-btn')[10])">🌙 Exam Mode</button>
+    </div>
+  </div>
+  <div class="stat-strip">
+    <div class="stat-tile reveal">
+      <div class="st-label">Exam Readiness</div>
+      <div class="st-val gv" id="h-ready">0%</div>
+      <div class="st-sub">Complete sessions</div>
+      <div class="st-bar"><div class="st-bar-fill" id="h-ready-bar" style="background:var(--gv);width:0%"></div></div>
+    </div>
+    <div class="stat-tile reveal">
+      <div class="st-label">Sessions Done</div>
+      <div class="st-val gc" id="h-sess">0/6</div>
+      <div class="st-sub">Pareto sessions</div>
+      <div class="st-bar"><div class="st-bar-fill" id="h-sess-bar" style="background:var(--gc);width:0%"></div></div>
+    </div>
+    <div class="stat-tile reveal">
+      <div class="st-label">Problems Solved</div>
+      <div class="st-val gp" id="h-prob">0</div>
+      <div class="st-sub">Mark problems done</div>
+      <div class="st-bar"><div class="st-bar-fill" id="h-prob-bar" style="background:var(--gp);width:0%"></div></div>
+    </div>
+    <div class="stat-tile reveal">
+      <div class="st-label">Study Streak</div>
+      <div class="st-val gg" id="h-streak">0 days</div>
+      <div class="st-sub">🔥 Keep it going</div>
+      <div class="st-bar"><div class="st-bar-fill" id="h-streak-bar" style="background:var(--gg);width:0%"></div></div>
+    </div>
+    <div class="stat-tile reveal">
+      <div class="st-label">Marks Predicted</div>
+      <div class="st-val gv" id="h-marks">--</div>
+      <div class="st-sub">Based on progress</div>
+      <div class="st-bar"><div class="st-bar-fill" id="h-marks-bar" style="background:var(--gv);width:0%"></div></div>
+    </div>
+    <div class="stat-tile reveal">
+      <div class="st-label">AI Confidence</div>
+      <div class="st-val gc">HIGH</div>
+      <div class="st-sub">System calibrated</div>
+      <div class="st-bar"><div class="st-bar-fill" style="background:var(--gc);width:88%"></div></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── AI INTELLIGENCE ──────────────── -->
+<div class="section" id="ai">
+  <div class="sec-tag">AI Intelligence Engine</div>
+  <h2 class="sec-h">Exam Pattern Analysis</h2>
+  <p class="sec-sub">AI-powered analysis of previous year questions, topic frequencies, and high-probability concepts to maximize your marks.</p>
+  <div class="ai-grid" id="ai-grid"></div>
+</div>
+
+<!-- ──────────────── SESSIONS ──────────────── -->
+<div class="section" id="sessions">
+  <div class="sec-tag">15-Hour Crash Roadmap</div>
+  <h2 class="sec-h">6 Elite Sessions</h2>
+  <p class="sec-sub">Pareto-optimized. Exam-oriented. Zero filler. Every minute is strategic.</p>
+  <div class="sessions-list" id="sessions-list"></div>
+</div>
+
+<!-- ──────────────── FORMULA ENGINE ──────────────── -->
+<div class="section" id="formulas">
+  <div class="sec-tag">Formula Engine</div>
+  <h2 class="sec-h">Formula Sheet</h2>
+  <p class="sec-sub">Every critical formula, beautifully rendered. Search, favorite, copy.</p>
+  <div class="formula-bar">
+    <div class="fbar-search">🔍 <input type="text" id="fsearch" placeholder="Search formulas..." oninput="renderFormulas()"></div>
+    <div class="pills">
+      <span class="pill on" onclick="setFF('all',this)">All</span>
+      <span class="pill" onclick="setFF('la',this)">Linear Algebra</span>
+      <span class="pill" onclick="setFF('ode',this)">ODEs</span>
+      <span class="pill" onclick="setFF('fav',this)">⭐ Saved</span>
+    </div>
+  </div>
+  <div class="fgrid" id="fgrid"></div>
+</div>
+
+<!-- ──────────────── PYQ ANALYZER ──────────────── -->
+<div class="section" id="pyq">
+  <div class="sec-tag">PYQ Intelligence</div>
+  <h2 class="sec-h">PYQ Analyzer</h2>
+  <p class="sec-sub">Previous year question pattern analysis. Know exactly what to expect.</p>
+  <div class="pyq-cats">
+    <button class="pyq-cat on" onclick="setPyqCat('all',this)">All</button>
+    <button class="pyq-cat" onclick="setPyqCat('rep',this)">Most Repeated</button>
+    <button class="pyq-cat" onclick="setPyqCat('imp',this)">Most Important</button>
+    <button class="pyq-cat" onclick="setPyqCat('exp',this)">Expected This Year</button>
+    <button class="pyq-cat" onclick="setPyqCat('conf',this)">High Scoring</button>
+  </div>
+  <div class="pyq-grid" id="pyq-grid"></div>
+</div>
+
+<!-- ──────────────── MOST REPEATED ──────────────── -->
+<div class="section" id="repeated">
+  <div class="sec-tag">Problem Intelligence</div>
+  <h2 class="sec-h">Most Repeated Problems</h2>
+  <p class="sec-sub">The exact problems that appear exam after exam. Master these first.</p>
+  <div class="rep-grid" id="rep-grid"></div>
+</div>
+
+<!-- ──────────────── EXPECTED QUESTIONS ──────────────── -->
+<div class="section" id="expected">
+  <div class="sec-tag">AI Prediction Engine</div>
+  <h2 class="sec-h">Expected Questions</h2>
+  <p class="sec-sub">High-confidence predictions based on PYQ analysis, topic cycles, and exam patterns.</p>
+  <div class="eq-grid" id="eq-grid"></div>
+</div>
+
+<!-- ──────────────── VIDEO HUB ──────────────── -->
+<div class="section" id="videos">
+  <div class="sec-tag">Video Intelligence Hub</div>
+  <h2 class="sec-h">Curated Learning Library</h2>
+  <p class="sec-sub">Netflix for engineering math. The best videos, ranked by exam usefulness.</p>
+  <div class="vhub-cats" id="vhub-cats">
+    <button class="vhub-cat on" onclick="setVidCat('all',this)">All Videos</button>
+    <button class="vhub-cat" onclick="setVidCat('gauss',this)">Gaussian Elim.</button>
+    <button class="vhub-cat" onclick="setVidCat('eigen',this)">Eigenvalues</button>
+    <button class="vhub-cat" onclick="setVidCat('ode1',this)">1st Order ODE</button>
+    <button class="vhub-cat" onclick="setVidCat('ode2',this)">2nd Order ODE</button>
+    <button class="vhub-cat" onclick="setVidCat('system',this)">Systems ODE</button>
+    <button class="vhub-cat" onclick="setVidCat('crash',this)">Crash Courses</button>
+    <button class="vhub-cat" onclick="setVidCat('revision',this)">Last Min Revision</button>
+  </div>
+  <div class="vid-grid" id="vid-grid"></div>
+</div>
+
+<!-- ──────────────── TOP 15 ──────────────── -->
+<div class="section" id="top15">
+  <div class="sec-tag">Ranked Intelligence</div>
+  <h2 class="sec-h">Top 15 High-Weightage Types</h2>
+  <p class="sec-sub">Ranked by exam frequency × marks weightage. Master these before anything else.</p>
+  <div class="t15-list" id="t15-list"></div>
+</div>
+
+<!-- ──────────────── MISTAKES ──────────────── -->
+<div class="section" id="mistakes">
+  <div class="sec-tag">Trap Detector</div>
+  <h2 class="sec-h">Common Mistakes</h2>
+  <p class="sec-sub">The exact errors that cost students marks every year. Know them. Avoid them.</p>
+  <div class="mis-grid" id="mis-grid"></div>
+</div>
+
+<!-- ──────────────── EXAM MODE ──────────────── -->
+<div class="section" id="exam">
+  <div class="exam-banner">
+    <div class="exam-live"><span style="width:7px;height:7px;border-radius:50%;background:var(--rose);animation:ai-pulse 1s ease infinite;display:inline-block"></span> EXAM MODE ACTIVE</div>
+    <h2 style="font-family:'Syne',sans-serif;font-size:clamp(20px,3vw,32px);font-weight:800;margin-bottom:6px">Distraction-Free Zone</h2>
+    <p style="color:var(--snow2);font-size:14px;margin-bottom:22px">Focus. Solve. Master.</p>
+    <div class="exam-timer" id="main-timer">00:00:00</div>
+    <div class="exam-timer-btns">
+      <button class="btn btn-v" id="timer-btn" onclick="toggleTimer()">▶ Start</button>
+      <button class="btn btn-g" onclick="resetTimer()">↺ Reset</button>
+      <button class="btn btn-g btn-sm" onclick="setTimerTo(5400)">1.5h</button>
+      <button class="btn btn-g btn-sm" onclick="setTimerTo(9000)">2.5h</button>
+    </div>
+  </div>
+  <div class="exam-sections">
+    <div class="exam-card">
+      <div class="ec-title">⚡ Flashcards</div>
+      <div class="flashcard-wrap" id="flashcard" onclick="flipCard()">
+        <div class="fc-q" id="fc-q">Loading...</div>
+        <div class="fc-a" id="fc-a">Click to reveal</div>
+      </div>
+      <div class="fc-nav">
+        <button class="btn btn-g btn-sm" style="flex:1" onclick="prevCard()">← Prev</button>
+        <button class="btn btn-v btn-sm" style="flex:1" onclick="nextCard()">Next →</button>
+      </div>
+      <div style="text-align:center;margin-top:8px;font-size:10px;color:var(--snow3);font-family:'JetBrains Mono',monospace" id="fc-counter">1/20</div>
+    </div>
+    <div class="exam-card">
+      <div class="ec-title">🍅 Pomodoro</div>
+      <div class="pom-dial" id="pom-display">25:00</div>
+      <div class="pom-mode" id="pom-mode">WORK SESSION</div>
+      <div class="pom-ctrls">
+        <button class="btn btn-v btn-sm" id="pom-btn" onclick="togglePom()">▶ Start</button>
+        <button class="btn btn-g btn-sm" onclick="resetPom()">↺</button>
+        <button class="btn btn-g btn-sm" onclick="setPomMode('work')">25m</button>
+        <button class="btn btn-g btn-sm" onclick="setPomMode('break')">5m</button>
+      </div>
+      <div class="pom-crc" id="pom-crc">
+        <div class="pcrc"></div><div class="pcrc"></div><div class="pcrc"></div><div class="pcrc"></div>
+      </div>
+    </div>
+    <div class="exam-card">
+      <div class="ec-title">🚨 Panic Checklist</div>
+      <ul class="panic-ul">
+        <li class="panic-li"><span class="panic-n">1</span> Write ALL given info first</li>
+        <li class="panic-li"><span class="panic-n">2</span> Identify problem type immediately</li>
+        <li class="panic-li"><span class="panic-n">3</span> Write formula before computing</li>
+        <li class="panic-li"><span class="panic-n">4</span> Do row ops step-by-step</li>
+        <li class="panic-li"><span class="panic-n">5</span> Check det sign twice</li>
+        <li class="panic-li"><span class="panic-n">6</span> Verify eigenvectors: Av=λv</li>
+        <li class="panic-li"><span class="panic-n">7</span> Write general form first (yₕ+yₚ)</li>
+        <li class="panic-li"><span class="panic-n">8</span> Show all integration clearly</li>
+      </ul>
+    </div>
+    <div class="exam-card">
+      <div class="ec-title">⚡ Rapid Revision</div>
+      <div id="rapid-rev"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── ANALYTICS ──────────────── -->
+<div class="section" id="analytics">
+  <div class="sec-tag">Performance Analytics</div>
+  <h2 class="sec-h">Mastery Dashboard</h2>
+  <p class="sec-sub">Real-time tracking of your preparation. Identify weak areas. Optimize focus.</p>
+  <div class="ana-rings">
+    <div class="ana-ring-card reveal">
+      <div class="ana-ring-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <defs><linearGradient id="ag1" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#6c3fff"/><stop offset="100%" stop-color="#2563eb"/></linearGradient></defs>
+          <circle class="arc-bg" cx="65" cy="65" r="52"/>
+          <circle class="arc-fg" id="arc1" cx="65" cy="65" r="52" stroke="url(#ag1)" stroke-dasharray="0 327"/>
+        </svg>
+        <div class="arc-center"><div class="arc-val" id="arc1-val" style="background:var(--gv);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0%</div><div class="arc-lbl">DONE</div></div>
+      </div>
+      <div class="arc-card-title">Completion</div>
+    </div>
+    <div class="ana-ring-card reveal">
+      <div class="ana-ring-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <defs><linearGradient id="ag2" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#2563eb"/><stop offset="100%" stop-color="#0891b2"/></linearGradient></defs>
+          <circle class="arc-bg" cx="65" cy="65" r="52"/>
+          <circle class="arc-fg" id="arc2" cx="65" cy="65" r="52" stroke="url(#ag2)" stroke-dasharray="0 327"/>
+        </svg>
+        <div class="arc-center"><div class="arc-val" id="arc2-val" style="background:var(--gc);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0%</div><div class="arc-lbl">MASTERY</div></div>
+      </div>
+      <div class="arc-card-title">Mastery Level</div>
+    </div>
+    <div class="ana-ring-card reveal">
+      <div class="ana-ring-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <defs><linearGradient id="ag3" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#10b981"/><stop offset="100%" stop-color="#059669"/></linearGradient></defs>
+          <circle class="arc-bg" cx="65" cy="65" r="52"/>
+          <circle class="arc-fg" id="arc3" cx="65" cy="65" r="52" stroke="url(#ag3)" stroke-dasharray="0 327"/>
+        </svg>
+        <div class="arc-center"><div class="arc-val" id="arc3-val" style="color:var(--em)">0%</div><div class="arc-lbl">CONFIDENCE</div></div>
+      </div>
+      <div class="arc-card-title">Confidence</div>
+    </div>
+    <div class="ana-ring-card reveal">
+      <div class="ana-ring-wrap">
+        <svg width="130" height="130" viewBox="0 0 130 130">
+          <defs><linearGradient id="ag4" x1="0%" y1="0%" x2="100%" y2="0%"><stop offset="0%" stop-color="#e11d48"/><stop offset="100%" stop-color="#6c3fff"/></linearGradient></defs>
+          <circle class="arc-bg" cx="65" cy="65" r="52"/>
+          <circle class="arc-fg" id="arc4" cx="65" cy="65" r="52" stroke="url(#ag4)" stroke-dasharray="0 327"/>
+        </svg>
+        <div class="arc-center"><div class="arc-val" id="arc4-val" style="background:var(--gp);-webkit-background-clip:text;-webkit-text-fill-color:transparent">0%</div><div class="arc-lbl">READINESS</div></div>
+      </div>
+      <div class="arc-card-title">Exam Readiness</div>
+    </div>
+  </div>
+  <div class="heat-grid" id="heat-grid"></div>
+</div>
+
+<!-- ──────────────── REVISION ENGINE ──────────────── -->
+<div class="section" id="revision">
+  <div class="sec-tag">Revision System</div>
+  <h2 class="sec-h">Revision Engine</h2>
+  <p class="sec-sub">Structured revision phases designed for maximum retention before your exam.</p>
+  <div class="rev-grid" id="rev-grid"></div>
+</div>
+
+<!-- ──────────────── PRODUCTIVITY ──────────────── -->
+<div class="section" id="productivity">
+  <div class="sec-tag">Productivity Hub</div>
+  <h2 class="sec-h">Study System</h2>
+  <p class="sec-sub">Goals, streaks, and tracking tools to maintain consistent momentum.</p>
+  <div class="prod-grid">
+    <div class="prod-card">
+      <div class="prod-title">🎯 Daily Goals</div>
+      <input class="goal-inp" id="goal-inp" type="text" placeholder="Add study goal..." onkeypress="if(event.key==='Enter')addGoal()">
+      <button class="btn btn-v" style="width:100%;padding:10px;margin-bottom:14px;justify-content:center" onclick="addGoal()">+ Add Goal</button>
+      <div id="goals-list"></div>
+    </div>
+    <div class="prod-card">
+      <div class="prod-title">🔥 Study Streak</div>
+      <div class="streak-big" id="streak-display">0</div>
+      <div class="streak-sub">DAY STREAK</div>
+      <div class="streak-cal" id="streak-cal"></div>
+      <button class="btn btn-v" style="width:100%;margin-top:14px;padding:11px;justify-content:center" onclick="logStreak()">✓ Log Today's Study</button>
+    </div>
+    <div class="prod-card">
+      <div class="prod-title">⚙️ Controls</div>
+      <div style="display:flex;flex-direction:column;gap:10px">
+        <button class="btn btn-g" style="width:100%;justify-content:center;padding:11px" onclick="exportData()">📤 Export Progress</button>
+        <button class="btn btn-g" style="width:100%;justify-content:center;padding:11px" onclick="if(confirm('Reset all progress?'))resetAll()">🗑️ Reset Progress</button>
+        <div style="margin-top:8px;padding:16px;background:var(--glass);border-radius:10px;border:1px solid var(--rim)">
+          <div style="font-size:9.5px;color:var(--snow3);font-family:'JetBrains Mono',monospace;letter-spacing:.1em;margin-bottom:10px">SESSION STATUS</div>
+          <div id="sess-status-list"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ──────────────── FOCUS MODE ──────────────── -->
+<div class="section" id="focus">
+  <div class="focus-hero">
+    <div class="focus-ring">
+      <svg width="260" height="260" viewBox="0 0 260 260">
+        <defs>
+          <linearGradient id="focus-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stop-color="#6c3fff"/>
+            <stop offset="100%" stop-color="#0891b2"/>
+          </linearGradient>
+        </defs>
+        <circle class="focus-ring-bg" cx="130" cy="130" r="115"/>
+        <circle class="focus-ring-fg" id="focus-arc" cx="130" cy="130" r="115" stroke-dasharray="0 723"/>
+      </svg>
+      <div class="focus-center">
+        <div class="focus-timer" id="focus-timer">25:00</div>
+        <div class="focus-sub-label" id="focus-label">READY TO FOCUS</div>
+      </div>
+    </div>
+    <div class="focus-quote" id="focus-quote">"An hour of focused study is worth ten hours of distracted effort."</div>
+    <div class="focus-ctas">
+      <button class="btn btn-v" id="focus-btn" onclick="toggleFocus()">▶ Begin Focus Session</button>
+      <button class="btn btn-g" onclick="resetFocus()">↺ Reset</button>
+      <button class="btn btn-g btn-sm" onclick="setFocusTime(1500)">25 min</button>
+      <button class="btn btn-g btn-sm" onclick="setFocusTime(3000)">50 min</button>
+      <button class="btn btn-g btn-sm" onclick="setFocusTime(5400)">90 min</button>
+    </div>
+  </div>
+</div>
+
+</main>
+</div><!-- end app -->
+
+<div id="toasts"></div>
+
+<script>
+/* ════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════ */
+const AI_DATA=[
+  {topic:"Eigenvalue & Eigenvector Problems",freq:7,prob:96,marks:"8–14",diff:"Medium",trend:"↑ +2 vs last year",tag:"hot",color:"#e11d48",glow:"var(--rose)"},
+  {topic:"Gaussian Elimination & RREF",freq:6,prob:94,marks:"6–10",diff:"Easy-Med",trend:"→ Stable",tag:"hot",color:"#d97706",glow:"var(--gold)"},
+  {topic:"2nd Order ODE (All 3 Cases)",freq:6,prob:93,marks:"10–14",diff:"Medium",trend:"↑ Trending",tag:"hot",color:"#e11d48",glow:"var(--rose)"},
+  {topic:"Matrix Diagonalization",freq:5,prob:90,marks:"10–14",diff:"Medium",trend:"↑ +1",tag:"high",color:"#6c3fff",glow:"var(--v)"},
+  {topic:"Integrating Factor Method",freq:5,prob:88,marks:"6–10",diff:"Medium",trend:"→ Stable",tag:"high",color:"#6c3fff",glow:"var(--v)"},
+  {topic:"3×3 Determinant (Cofactor)",freq:5,prob:87,marks:"4–8",diff:"Easy",trend:"↑ +1",tag:"high",color:"#d97706",glow:"var(--gold)"},
+  {topic:"Matrix Inverse (Gauss-Jordan)",freq:5,prob:85,marks:"6–10",diff:"Medium",trend:"→ Stable",tag:"high",color:"#2563eb",glow:"var(--b)"},
+  {topic:"System of ODEs (Matrix Method)",freq:4,prob:82,marks:"10–16",diff:"Hard",trend:"↑ New trend",tag:"med",color:"#10b981",glow:"var(--em)"},
+  {topic:"Undetermined Coefficients",freq:4,prob:80,marks:"6–10",diff:"Medium",trend:"→ Stable",tag:"med",color:"#0891b2",glow:"var(--c)"},
+  {topic:"Bernoulli & Exact ODEs",freq:3,prob:76,marks:"6–10",diff:"Medium",trend:"↓ -1",tag:"med",color:"#10b981",glow:"var(--em)"},
+  {topic:"Rank, Nullity & Subspaces",freq:4,prob:79,marks:"4–8",diff:"Easy-Med",trend:"↑ Reviving",tag:"high",color:"#6c3fff",glow:"var(--v)"},
+  {topic:"Variation of Parameters",freq:3,prob:72,marks:"8–12",diff:"Hard",trend:"→ Stable",tag:"med",color:"#0891b2",glow:"var(--c)"}
+];
+
+const SESSIONS_DATA=[
+  {id:1,cls:"sb1",col:"#6c3fff",title:"Gaussian Elimination & Linear Systems",dur:"2.5 hrs",prob:95,marks:12,
+   concepts:["Row Echelon Form (REF)","Reduced Row Echelon Form (RREF)","Rank of a matrix","Pivot positions","Free variables","Consistency conditions"],
+   formulas:["rank(A)+nullity(A)=n","Consistent: rank(A)=rank([A|b])","#free vars = n−rank(A)"],
+   problems:["3×3 system → REF then RREF","Determine consistency","Find rank and nullity","Solve Ax=0 (homogeneous)","Parametric solution form"],
+   tricks:["Count nonzero rows in REF = rank","Pivot=1, zero ABOVE+BELOW in RREF","Inconsistent row: [0 0…0 | k≠0]"],
+   traps:["Not zeroing ABOVE pivot in RREF","Counting rows not rank","Missing free variable parametrization"],
+   checklist:["Compute REF","Compute RREF","Find rank from REF","Identify free variables","Solve 3×3 consistent system","Write parametric solution"],
+   pyq:"95%",yt:"3Blue1Brown: Essence of LA + Khan Academy RREF"
+  },
+  {id:2,cls:"sb2",col:"#2563eb",title:"Inverse, Determinants & Vector Spaces",dur:"2.5 hrs",prob:91,marks:12,
+   concepts:["Gauss-Jordan for A⁻¹","Cofactor expansion (3×3 det)","Singular vs Non-singular","Subspace axioms","Basis & Dimension","Col/Row/Null spaces"],
+   formulas:["[A|I]→RREF→[I|A⁻¹]","det(2×2)=ad−bc","A⁻¹=(1/det)·adj(A)","det(AB)=det(A)det(B)"],
+   problems:["Invert 3×3 matrix","3×3 determinant by cofactor","Verify subspace axioms","Find column space basis","Apply rank-nullity"],
+   tricks:["Sign pattern: (+−+)(−+−)(+−+)","2×2 inverse: swap diagonal, negate off-diag","Triangular det = diagonal product"],
+   traps:["Wrong cofactor signs","det(kA)=kⁿdet(A) not k·det(A)","Subspace: check ALL 3 axioms"],
+   checklist:["Invert 2×2 and 3×3","Compute 3×3 det (2 methods)","Check subspace axioms","Find basis for col/null/row","State rank-nullity"],
+   pyq:"88%",yt:"MIT OCW 18.06 + Dr. Gajendra Purohit Determinants"
+  },
+  {id:3,cls:"sb3",col:"#06b6d4",title:"Eigenvalues, Eigenvectors & Diagonalization",dur:"2.5 hrs",prob:98,marks:14,
+   concepts:["Characteristic equation: det(A−λI)=0","Finding eigenvectors","Algebraic/Geometric multiplicity","Diagonalization A=PDP⁻¹","Aⁿ via diagonalization","Linear Transformations: Kernel/Range"],
+   formulas:["det(A−λI)=0","(A−λI)v=0","tr(A)=Σλᵢ","det(A)=Πλᵢ","A=PDP⁻¹, Aⁿ=PD^nP⁻¹"],
+   problems:["Eigenvalues of 2×2 and 3×3","Eigenvectors for each λ","Check diagonalizability","Compute A⁵ via diagonalization","Find kernel/range of T"],
+   tricks:["2×2 char eq: λ²−(trace)λ+det=0","n distinct eigenvalues → diagonalizable","Diagonalizable iff geom.mult=alg.mult"],
+   traps:["det(A−λI) NOT det(A+λI)","P columns must match order in D","Repeated λ: check multiplicity carefully"],
+   checklist:["Solve char. equation","Find eigenvectors per eigenvalue","Verify diagonalizability","Compute Aⁿ","Find kernel and range"],
+   pyq:"98%",yt:"3Blue1Brown Eigenvectors + MIT 18.06 Lecture 21"
+  },
+  {id:4,cls:"sb4",col:"#10b981",title:"First Order Differential Equations",dur:"2.5 hrs",prob:88,marks:10,
+   concepts:["Separable ODEs: g(y)dy=f(x)dx","Exact ODEs: M dx+N dy=0","Integrating Factor: y'+Py=Q","Bernoulli: y'+Py=Qyⁿ","Initial Value Problems"],
+   formulas:["IF=e^∫P(x)dx","Exactness: ∂M/∂y=∂N/∂x","Bernoulli: v=y^(1-n)","y=(1/IF)∫Q·IF dx + C"],
+   problems:["Separable ODE with IVP","Check exactness and solve","y'+2y=4eˣ by IF","Bernoulli y'+y=y²","Non-exact: find IF and solve"],
+   tricks:["Linear ODE: always use IF","Bernoulli: divide by yⁿ first","Check exactness BEFORE method"],
+   traps:["IF wrong if P(x) not isolated","Missing +C in integration","Bernoulli: v=y^(1-n) not yⁿ"],
+   checklist:["Solve 3 separable ODEs","Solve exact ODE","Solve linear ODE by IF","Solve Bernoulli equation","Apply IVP correctly"],
+   pyq:"88%",yt:"Professor Leonard: 1st Order ODEs + Paul's Online Notes"
+  },
+  {id:5,cls:"sb5",col:"#d97706",title:"Second Order Differential Equations",dur:"2.5 hrs",prob:91,marks:14,
+   concepts:["Char. eq: ar²+br+c=0","Real distinct roots","Repeated root","Complex roots α±βi","Undetermined Coefficients","Variation of Parameters"],
+   formulas:["Case1: C₁e^(r₁x)+C₂e^(r₂x)","Case2: (C₁+C₂x)e^(rx)","Case3: e^(αx)(C₁cosβx+C₂sinβx)","yₚ: guess from RHS form"],
+   problems:["Solve y''−5y'+6y=0","Solve y''−4y'+4y=0","Solve y''+4y=0","Solve y''+y=sinx (UC)","Variation of Parameters example"],
+   tricks:["Discriminant b²−4ac: +real, 0repeat, −complex","Resonance: multiply guess by x","Final always: y=yₕ+yₚ"],
+   traps:["Repeated root: MUST include x factor","UC: RHS=xeˣ needs (Ax+B)eˣ","Complex: e^αx is OUTSIDE trig"],
+   checklist:["ID root type from discriminant","Solve all 3 homo. cases","Apply UC method","Apply VoP method","Solve full IVP"],
+   pyq:"91%",yt:"Professor Leonard 2nd Order + Dr. Gajendra 2nd Order ODE"
+  },
+  {id:6,cls:"sb6",col:"#e11d48",title:"Systems of ODEs & Final Exam Sprint",dur:"2.5 hrs",prob:85,marks:12,
+   concepts:["System X'=AX (matrix form)","Eigenvalue method for systems","X=c₁v₁e^(λ₁t)+c₂v₂e^(λ₂t)","Complex eigenvalue: real/imag parts","Final rapid formula review","5 mixed problems in 30 min"],
+   formulas:["X'=AX → find eigenvalues of A","X=Σcᵢvᵢe^(λᵢt)","Complex λ=α+βi: use Euler's formula","IVP: set t=0 to find C₁,C₂"],
+   problems:["Convert system to X'=AX","Find λ and v of coeff. matrix","Write general solution","Apply IVP for constants","Mixed rapid-fire: 5 problems"],
+   tricks:["System of ODEs = eigenvalue problem","Eigenvector = direction, e^λt = growth","If complex: extract real solution"],
+   traps:["Wrong matrix from system","IVP: must set t=0 not x=0","Forgetting constants C₁,C₂"],
+   checklist:["Write system as X'=AX","Find eigenvalues + eigenvectors","Write complete general solution","Apply IVP","Rapid review: 5 mixed in 30min"],
+   pyq:"85%",yt:"MIT OCW 18.03 Linear Systems + GATE Smashers System ODE"
+  }
+];
+
+const FORMULAS_DATA=[
+  {id:1,t:"la",name:"Rank-Nullity Theorem",tex:"\\text{rank}(A)+\\text{nullity}(A)=n",desc:"n = number of columns. Nullity = number of free variables = dim of null space.",fav:false},
+  {id:2,t:"la",name:"Determinant 2×2",tex:"\\det\\begin{pmatrix}a&b\\\\c&d\\end{pmatrix}=ad-bc",desc:"Cross multiply: top-left × bottom-right minus top-right × bottom-left.",fav:false},
+  {id:3,t:"la",name:"Matrix Inverse 2×2",tex:"A^{-1}=\\frac{1}{ad-bc}\\begin{pmatrix}d&-b\\\\-c&a\\end{pmatrix}",desc:"Swap diagonal, negate off-diagonal, divide by determinant.",fav:false},
+  {id:4,t:"la",name:"Characteristic Equation",tex:"\\det(A-\\lambda I)=0",desc:"Solve this polynomial for eigenvalues λ. Then solve (A−λI)v=0 per eigenvalue.",fav:false},
+  {id:5,t:"la",name:"Trace = Sum of Eigenvalues",tex:"\\text{tr}(A)=\\lambda_1+\\lambda_2+\\cdots+\\lambda_n",desc:"Quick check: sum of main diagonal = sum of eigenvalues.",fav:false},
+  {id:6,t:"la",name:"Det = Product of Eigenvalues",tex:"\\det(A)=\\lambda_1\\cdot\\lambda_2\\cdots\\lambda_n",desc:"Fast verification: product of all eigenvalues equals determinant.",fav:false},
+  {id:7,t:"la",name:"Diagonalization",tex:"A=PDP^{-1},\\quad A^n=PD^nP^{-1}",desc:"P = eigenvector matrix (columns), D = diagonal matrix of eigenvalues.",fav:false},
+  {id:8,t:"la",name:"2×2 Characteristic Equation",tex:"\\lambda^2-\\text{tr}(A)\\lambda+\\det(A)=0",desc:"Faster than expanding det(A−λI) for 2×2 matrices.",fav:false},
+  {id:9,t:"la",name:"Subspace Conditions",tex:"0\\in W,\\;u+v\\in W,\\;cu\\in W",desc:"All three must hold for W to be a subspace. Failing any one is sufficient to disqualify.",fav:false},
+  {id:10,t:"la",name:"Det Property: Row Swap",tex:"\\det(A')=-\\det(A) \\text{ (one row swap)}",desc:"Each row swap multiplies determinant by −1. Keep track in Gaussian elimination.",fav:false},
+  {id:11,t:"ode",name:"Integrating Factor",tex:"\\mu(x)=e^{\\int P(x)\\,dx}",desc:"For y' + P(x)y = Q(x). Multiply both sides. LHS becomes d/dx[μy].",fav:false},
+  {id:12,t:"ode",name:"Linear 1st Order Solution",tex:"y=\\frac{1}{\\mu}\\left[\\int\\mu Q\\,dx+C\\right]",desc:"Standard formula after applying integrating factor. Always add constant C.",fav:false},
+  {id:13,t:"ode",name:"Exactness Condition",tex:"\\frac{\\partial M}{\\partial y}=\\frac{\\partial N}{\\partial x}",desc:"For Mdx + Ndy = 0 to be exact. If exact, find F where Fx=M, Fy=N.",fav:false},
+  {id:14,t:"ode",name:"Bernoulli Substitution",tex:"v=y^{1-n}\\Rightarrow\\text{linear in }v",desc:"Divide by yⁿ, then let v=y^(1-n). The equation becomes linear in v.",fav:false},
+  {id:15,t:"ode",name:"Char. Equation (2nd Order)",tex:"ar^2+br+c=0,\\quad\\Delta=b^2-4ac",desc:"Δ>0: 2 real roots. Δ=0: repeated root. Δ<0: complex roots α±βi.",fav:false},
+  {id:16,t:"ode",name:"2nd Order: Real Distinct",tex:"y=C_1e^{r_1x}+C_2e^{r_2x}",desc:"When discriminant > 0. Two distinct real roots r₁ and r₂.",fav:false},
+  {id:17,t:"ode",name:"2nd Order: Repeated Root",tex:"y=(C_1+C_2x)e^{rx}",desc:"When discriminant = 0. Single root r = −b/(2a). Second solution has factor x.",fav:false},
+  {id:18,t:"ode",name:"2nd Order: Complex Roots",tex:"y=e^{\\alpha x}(C_1\\cos\\beta x+C_2\\sin\\beta x)",desc:"Roots α±βi. α=−b/(2a), β=√|Δ|/(2a). The e^αx factor is outside the trig.",fav:false},
+  {id:19,t:"ode",name:"System of ODEs",tex:"\\mathbf{X}'=A\\mathbf{X}\\Rightarrow\\mathbf{X}=\\sum c_i\\mathbf{v}_ie^{\\lambda_it}",desc:"Find eigenvalues/vectors of A. Each pair contributes one solution term.",fav:false},
+  {id:20,t:"ode",name:"Variation of Parameters",tex:"y_p=-y_1\\int\\frac{y_2g}{W}dx+y_2\\int\\frac{y_1g}{W}dx",desc:"W=y₁y₂'−y₂y₁' (Wronskian). Use when undetermined coefficients fails.",fav:false}
+];
+
+const PYQ_DATA=[
+  {cat:"rep imp",freq:7,title:"Eigenvalue Calculation (3×3 matrix)",desc:"Find all eigenvalues and corresponding eigenvectors. State if diagonalizable.",badges:["rep","imp"],yr:"Appeared 2016–2023",marks:"10–12",diff:"Medium"},
+  {cat:"rep imp exp",freq:6,title:"RREF and Solution Set",desc:"Reduce augmented matrix to RREF. Find solution set including parametric form.",badges:["rep","exp"],yr:"Appeared 2015–2023",marks:"6–8",diff:"Easy-Med"},
+  {cat:"rep exp",freq:6,title:"Second Order ODE with IVP",desc:"Solve ay''+by'+cy=g(x) subject to initial conditions. Identify root type.",badges:["rep","exp"],yr:"Appeared 2017–2023",marks:"10–14",diff:"Medium"},
+  {cat:"imp exp",freq:5,title:"Diagonalize A, Compute A⁵",desc:"Diagonalize matrix A. Use result to compute Aⁿ for given n.",badges:["imp","exp"],yr:"Appeared 2018–2023",marks:"12–14",diff:"Hard"},
+  {cat:"rep conf",freq:5,title:"Integrating Factor Method",desc:"Solve y'+P(x)y=Q(x) using integrating factor. Apply initial condition.",badges:["rep","conf"],yr:"Appeared 2016–2023",marks:"6–8",diff:"Medium"},
+  {cat:"rep imp conf",freq:5,title:"Determinant by Cofactor Expansion",desc:"Compute 3×3 determinant using cofactor expansion along first row or column.",badges:["rep","conf"],yr:"Appeared 2015–2023",marks:"4–6",diff:"Easy"},
+  {cat:"exp conf",freq:4,title:"Matrix Inverse (Gauss-Jordan)",desc:"Find A⁻¹ using row operations on [A|I]. Verify by computing AA⁻¹.",badges:["exp","conf"],yr:"Appeared 2017–2022",marks:"6–8",diff:"Medium"},
+  {cat:"rep imp",freq:4,title:"Undetermined Coefficients",desc:"Solve non-homogeneous ODE using method of undetermined coefficients.",badges:["rep","imp"],yr:"Appeared 2016–2022",marks:"8–10",diff:"Medium"},
+  {cat:"exp",freq:4,title:"System of ODEs (2×2)",desc:"Solve x'=Ax using eigenvalue method. Write complete general solution.",badges:["exp"],yr:"Appeared 2019–2023",marks:"10–14",diff:"Hard"},
+  {cat:"imp conf",freq:3,title:"Bernoulli Equation",desc:"Solve Bernoulli equation using substitution v=y^(1-n). Full solution.",badges:["imp"],yr:"Appeared 2015–2021",marks:"6–8",diff:"Medium"},
+  {cat:"conf rep",freq:5,title:"Rank and Consistency Check",desc:"Find rank of matrix and augmented matrix. State consistency conditions.",badges:["rep","conf"],yr:"Appeared 2015–2023",marks:"4–6",diff:"Easy"},
+  {cat:"exp imp",freq:3,title:"Variation of Parameters",desc:"Solve non-homogeneous 2nd order ODE using variation of parameters method.",badges:["imp","exp"],yr:"Appeared 2018–2022",marks:"8–12",diff:"Hard"}
+];
+
+const EXPECTED_Qs=[
+  {conf:95,type:"Long Question",title:"Find Eigenvalues and Diagonalize 3×3 Matrix",desc:"Given matrix A, find all eigenvalues, eigenvectors, and diagonalize. Compute A⁴.",marks:14},
+  {conf:93,type:"Long Question",title:"Solve 2nd Order ODE with Initial Conditions",desc:"y'' − 5y' + 6y = 2eˣ with y(0)=1, y'(0)=0. Identify case, find yₕ and yₚ.",marks:12},
+  {conf:90,type:"Short Question",title:"RREF and Solution Set (3 variables)",desc:"Row reduce the given system to RREF. State consistency and write parametric solution.",marks:8},
+  {conf:88,type:"Long Question",title:"Solve System of 2 ODEs via Matrix Method",desc:"x'=Ax where A is given. Find eigenvalues of A, write complete solution X(t).",marks:14},
+  {conf:86,type:"Short Question",title:"3×3 Determinant + Inverse",desc:"Find det(A) by cofactor. If det≠0, find A⁻¹ using Gauss-Jordan.",marks:8},
+  {conf:84,type:"Derivation",title:"Prove Rank-Nullity Theorem",desc:"State and prove rank(A)+nullity(A)=n. Include example with specific matrix.",marks:8},
+  {conf:82,type:"Short Question",title:"Solve Integrating Factor ODE",desc:"Solve y' + (2/x)y = x³. Find integrating factor, integrate, apply I.C.",marks:6},
+  {conf:80,type:"Tricky",title:"Variation of Parameters (Non-standard RHS)",desc:"Solve y'' + y = sec x using variation of parameters. Compute Wronskian explicitly.",marks:12},
+  {conf:78,type:"Short Question",title:"Bernoulli Equation with IVP",desc:"Solve dy/dx + y = y² · eˣ with y(0)=1/2. Use substitution v=y⁻¹.",marks:8},
+  {conf:76,type:"Long Question",title:"Complete Exact ODE Analysis",desc:"Check if (2xy+y²)dx+(x²+2xy)dy=0 is exact. If yes, find solution F(x,y)=C.",marks:10}
+];
+
+const VIDEOS_DATA=[
+  {cat:"gauss",creator:"3Blue1Brown",title:"Essence of Linear Algebra: Systems of Equations",dur:"12:09",diff:"easy",exam:"★★★★★",url:"https://youtu.be/uQhTuRlWMxw",color:"#6c3fff",topic:"Gaussian Elim."},
+  {cat:"gauss",creator:"Khan Academy",title:"Row Reduction and RREF — Complete Guide",dur:"18:32",diff:"easy",exam:"★★★★☆",url:"https://youtu.be/lP7lEHQDLSE",color:"#2563eb",topic:"RREF"},
+  {cat:"eigen",creator:"3Blue1Brown",title:"Eigenvectors and Eigenvalues Visually Explained",dur:"17:16",diff:"med",exam:"★★★★★",url:"https://youtu.be/PFDu9oVAE-g",color:"#6c3fff",topic:"Eigenvalues"},
+  {cat:"eigen",creator:"MIT OpenCourseWare",title:"Eigenvalues and Eigenvectors — Lecture 21",dur:"51:02",diff:"hard",exam:"★★★★★",url:"https://youtu.be/lXNXrLcoerU",color:"#e11d48",topic:"Eigenvectors"},
+  {cat:"eigen",creator:"Dr. Gajendra Purohit",title:"Eigenvalues Complete in 1 Video — GATE/Uni Exam",dur:"32:18",diff:"med",exam:"★★★★★",url:"https://youtu.be/ue3ylSV4oIk",color:"#d97706",topic:"Eigenvalues"},
+  {cat:"gauss",creator:"Neso Academy",title:"Gaussian Elimination — Step by Step",dur:"14:22",diff:"easy",exam:"★★★★☆",url:"https://youtu.be/2j5Ic2V7wq4",color:"#10b981",topic:"Gauss Elim."},
+  {cat:"ode1",creator:"Professor Leonard",title:"First Order Linear Differential Equations",dur:"1:09:00",diff:"med",exam:"★★★★★",url:"https://youtu.be/d7R_ql_zXzk",color:"#0891b2",topic:"1st Order ODE"},
+  {cat:"ode1",creator:"The Organic Chemistry Tutor",title:"Integrating Factor Method — Full Examples",dur:"24:15",diff:"med",exam:"★★★★★",url:"https://youtu.be/p69lJQTWdAM",color:"#6c3fff",topic:"IF Method"},
+  {cat:"ode1",creator:"PatrickJMT",title:"Bernoulli Differential Equations — Explained",dur:"16:43",diff:"med",exam:"★★★★☆",url:"https://youtu.be/JJlP0MUF62M",color:"#2563eb",topic:"Bernoulli"},
+  {cat:"ode2",creator:"Professor Leonard",title:"Second Order Homogeneous Equations",dur:"1:04:00",diff:"med",exam:"★★★★★",url:"https://youtu.be/g-4R2-iEa6A",color:"#d97706",topic:"2nd Order ODE"},
+  {cat:"ode2",creator:"Dr. Gajendra Purohit",title:"Undetermined Coefficients — All Cases Covered",dur:"28:40",diff:"med",exam:"★★★★★",url:"https://youtu.be/2q3M3qJUeqk",color:"#d97706",topic:"UC Method"},
+  {cat:"ode2",creator:"Khan Academy",title:"Variation of Parameters — Step by Step",dur:"19:52",diff:"hard",exam:"★★★★☆",url:"https://youtu.be/97MWDGzJdOQ",color:"#e11d48",topic:"VoP"},
+  {cat:"system",creator:"MIT OpenCourseWare",title:"Linear Systems of ODEs — Full Lecture",dur:"48:20",diff:"hard",exam:"★★★★★",url:"https://youtu.be/xbH8bRjMd-A",color:"#e11d48",topic:"System ODE"},
+  {cat:"system",creator:"GATE Smashers",title:"Systems of ODE — Matrix Method (GATE Oriented)",dur:"35:10",diff:"hard",exam:"★★★★★",url:"https://youtu.be/eRiM4blp_yU",color:"#10b981",topic:"Matrix Method"},
+  {cat:"crash",creator:"Dr. Gajendra Purohit",title:"Linear Algebra Complete Crash Course",dur:"4:12:00",diff:"med",exam:"★★★★★",url:"https://youtu.be/j07xdsMKZXw",color:"#d97706",topic:"LA Crash"},
+  {cat:"crash",creator:"MathTheBeautiful",title:"Linear Algebra — Full Course Beautifully Explained",dur:"3:40:00",diff:"med",exam:"★★★★☆",url:"https://youtu.be/nTwRjQ4xqUc",color:"#6c3fff",topic:"LA Full"},
+  {cat:"crash",creator:"Professor Leonard",title:"Differential Equations — Complete Playlist",dur:"~12 hrs",diff:"med",exam:"★★★★★",url:"https://youtu.be/p_di4Zn4wz4",color:"#0891b2",topic:"ODE Full"},
+  {cat:"revision",creator:"GATE Smashers",title:"Linear Algebra Last Minute Revision",dur:"1:12:00",diff:"easy",exam:"★★★★★",url:"https://youtu.be/example1",color:"#10b981",topic:"LA Revision"},
+  {cat:"revision",creator:"The Organic Chemistry Tutor",title:"Differential Equations Quick Review",dur:"58:30",diff:"easy",exam:"★★★★★",url:"https://youtu.be/example2",color:"#6c3fff",topic:"ODE Revision"}
+];
+
+const MISTAKES_DATA=[
+  {title:"Wrong Cofactor Sign Pattern",wrong:"Applying same sign to all 3×3 cofactors","right":"Checkerboard: (+−+)(−+−)(+−+) — second position is negative"},
+  {title:"RREF vs REF Confusion",wrong:"Stopping at REF, calling it RREF","right":"RREF: each pivot = 1, zeros ABOVE AND below each pivot"},
+  {title:"det(kA) vs k·det(A)",wrong:"Writing det(3A)=3·det(A) for 3×3","right":"det(kA)=kⁿ·det(A). For 3×3 matrix: det(3A)=27·det(A)"},
+  {title:"Missing Particular Solution",wrong:"Writing only yₕ for non-homogeneous ODE","right":"Final answer MUST be y = yₕ + yₚ. Never omit yₚ"},
+  {title:"Repeated Root — No x Factor",wrong:"y=(C₁+C₂)e^(rx) for repeated root","right":"y=(C₁+C₂x)e^(rx). Without x, solutions are NOT independent"},
+  {title:"Integrating Factor: P(x) Not Isolated",wrong:"Using IF before isolating y' term","right":"FIRST rewrite as y'+P(x)y=Q(x), THEN compute IF=e^∫P dx"},
+  {title:"Eigenvector Column Order in P",wrong:"Columns of P not matching eigenvalue order in D","right":"D=diag(λ₁,λ₂) → P=[v₁|v₂]. Column order MUST match"},
+  {title:"Bernoulli Substitution Error",wrong:"Using v=yⁿ or dividing incorrectly","right":"Divide by yⁿ first, then v=y^(1-n). dv/dx=(1-n)y^(-n)y'"},
+  {title:"Characteristic Equation Sign",wrong:"Writing det(A+λI)=0","right":"ALWAYS det(A−λI)=0. Subtracting λ from diagonal only"},
+  {title:"UC Resonance — Missing x",wrong:"Guessing Aeˣ when eˣ already in yₕ","right":"Multiply guess by x: try Axeˣ. Still in yₕ? Multiply by x again"}
+];
+
+const TOP15_DATA=[
+  {rank:1,topic:"Eigenvalue & Eigenvector Problems",why:"Most repeated across all exam types",marks:14,strat:"det(A−λI)=0 for λ, then (A−λI)v=0. Check: trace=Σλ, det=Πλ"},
+  {rank:2,topic:"2nd Order ODE — All Three Cases",why:"Three variants, all extremely common",marks:14,strat:"b²−4ac: + → real, 0 → repeat (+x factor!), − → complex"},
+  {rank:3,topic:"Gaussian Elimination to RREF",why:"Foundation of all linear system problems",marks:12,strat:"REF: leading entry right. RREF: pivot=1, zeros above AND below"},
+  {rank:4,topic:"Matrix Diagonalization",why:"Long-mark question in nearly every exam",marks:12,strat:"4 steps: λ → v → P → D → A=PDP⁻¹. For Aⁿ: PD^nP⁻¹"},
+  {rank:5,topic:"Integrating Factor Method",why:"Standard technique for 1st order linear",marks:10,strat:"Isolate y' → IF=e^∫P dx → multiply → d/dx[μy]=μQ → integrate"},
+  {rank:6,topic:"Matrix Inverse (Gauss-Jordan)",why:"Short answer staple in every exam",marks:10,strat:"[A|I] → row reduce left half → right half is A⁻¹"},
+  {rank:7,topic:"3×3 Determinant",why:"Required for eigenvalues, inverse, consistency",marks:8,strat:"Cofactor along row 1. Sign: a₁₁M₁₁ − a₁₂M₁₂ + a₁₃M₁₃"},
+  {rank:8,topic:"System of ODEs (Matrix Method)",why:"High-marks, high-yield advanced topic",marks:12,strat:"X'=AX → find λ,v of A → X=Σcᵢvᵢe^(λᵢt)"},
+  {rank:9,topic:"Undetermined Coefficients",why:"Standard non-homogeneous technique",marks:10,strat:"eˣ→Aeˣ, sin→Asin+Bcos, xⁿ→Poly. Resonance: multiply by x"},
+  {rank:10,topic:"Separable ODEs",why:"Simplest ODE type — never miss these",marks:8,strat:"g(y)dy=f(x)dx → integrate both → +C → solve for y"},
+  {rank:11,topic:"Rank, Nullity & Subspaces",why:"Theory question needing clear understanding",marks:8,strat:"rank = #pivot rows in REF. nullity = n−rank. Verify 3 axioms"},
+  {rank:12,topic:"Exact ODEs",why:"Identifiable type with clear method",marks:8,strat:"Check ∂M/∂y=∂N/∂x → Fx=M integrate → use Fy=N for g(y)"},
+  {rank:13,topic:"Characteristic Equation",why:"First step for diagonalization and systems",marks:6,strat:"2×2: λ²−(tr)λ+det=0. Faster than full cofactor expansion"},
+  {rank:14,topic:"Bernoulli Equation",why:"Moderate difficulty, clear marks",marks:8,strat:"v=y^(1-n) → linear → IF method → back-substitute"},
+  {rank:15,topic:"Variation of Parameters",why:"Alternative when UC fails — reliable marks",marks:10,strat:"y₁,y₂ from homo. W=Wronskian. yₚ formula with two integrals"}
+];
+
+const REVISION_DATA=[
+  {phase:"Phase 1 — 48h Before",title:"Core Formula Recall",items:["Char. equation and root cases","Integrating factor formula","RREF procedure","Eigenvalue-eigenvector method","3×3 det sign pattern"]},
+  {phase:"Phase 2 — 24h Before",title:"Problem Pattern Drill",items:["Solve 2 eigenvalue problems","Solve one of each ODE type","Invert one 3×3 matrix","Write solution to system X'=AX","Apply UC to one non-homo ODE"]},
+  {phase:"Phase 3 — 12h Before",title:"Flash Revision",items:["Formula flashcards × 3 rounds","Top 15 problem types review","All 10 common mistakes","Expected questions scan","Panic checklist memorize"]},
+  {phase:"Phase 4 — Night Before",title:"Light Revision Only",items:["No new topics","Quick formula sheet scan","Sleep 7–8 hours mandatory","Set alarm 30 min early","Eat breakfast before exam"]},
+  {phase:"Exam Morning",title:"Pre-Exam Protocol",items:["Read entire paper first (5 min)","Attempt easiest questions first","Show all intermediate steps","Write formula before solving","Verify det sign and pivots"]},
+  {phase:"During Exam",title:"In-Exam Strategy",items:["1 min per mark is the rule","Eigenvalue = 14 marks → 14 min","If stuck: move on, return later","Partial marks exist — write steps","Cross-check: trace=Σλ, det=Πλ"]}
+];
+
+const FLASHCARDS=[
+  {q:"Characteristic equation formula?",a:"det(A − λI) = 0"},
+  {q:"Integrating factor formula?",a:"μ(x) = e^∫P(x)dx"},
+  {q:"Rank-Nullity theorem?",a:"rank(A) + nullity(A) = n"},
+  {q:"2nd Order: repeated root solution?",a:"y = (C₁ + C₂x)e^(rx)"},
+  {q:"2nd Order: complex roots α±βi?",a:"y = e^αx(C₁cosβx + C₂sinβx)"},
+  {q:"Diagonalization formula?",a:"A = PDP⁻¹, Aⁿ = PD^nP⁻¹"},
+  {q:"System of ODEs solution?",a:"X = c₁v₁e^(λ₁t) + c₂v₂e^(λ₂t)"},
+  {q:"Exactness condition?",a:"∂M/∂y = ∂N/∂x"},
+  {q:"Bernoulli substitution?",a:"v = y^(1−n)"},
+  {q:"trace(A) in terms of eigenvalues?",a:"tr(A) = λ₁ + λ₂ + ⋯ + λₙ"},
+  {q:"det(A) in terms of eigenvalues?",a:"det(A) = λ₁ · λ₂ · ⋯ · λₙ"},
+  {q:"When is a system inconsistent?",a:"Row [0 0…0 | k≠0] appears in REF"},
+  {q:"Resonance in Undetermined Coefficients?",a:"Multiply the guess by x"},
+  {q:"Number of free variables?",a:"n − rank(A) = nullity(A)"},
+  {q:"Subspace three axioms?",a:"0∈W, closed under +, closed under scalar mult"},
+  {q:"VoP formula for yₚ?",a:"−y₁∫(y₂g/W)dx + y₂∫(y₁g/W)dx"},
+  {q:"2×2 inverse formula?",a:"(1/det)·[[d,−b],[−c,a]]"},
+  {q:"Gauss-Jordan for inverse?",a:"[A|I] → row reduce → [I|A⁻¹]"},
+  {q:"Separable ODE method?",a:"g(y)dy = f(x)dx → integrate both sides"},
+  {q:"When is matrix diagonalizable?",a:"Geom. mult = Alg. mult for every eigenvalue"}
+];
+
+const RAPID_REV=["det(A−λI)=0 → eigenvectors → PDP⁻¹","RREF: pivot=1, zeros above+below","IF=e^∫P dx → d/dx[μy]=μQ → integrate","Repeated root: y=(C₁+C₂x)e^rx ← no x is WRONG","Complex α±βi → e^αx(C₁cosβx+C₂sinβx)","System X'=AX: eigenvalue problem of coeff. matrix","Rank-Nullity: rank+nullity=n","Bernoulli: v=y^(1-n) → becomes linear","yₕ+yₚ: ALWAYS include both for non-homo","Exact: ∂M/∂y=∂N/∂x → Fx=M,Fy=N → F=C"];
+
+/* STATE */
+let S=JSON.parse(localStorage.getItem('mathx2')||'{}');
+S.sess=S.sess||{};S.cl=S.cl||{};S.prob=S.prob||{};S.fav=S.fav||[];
+S.goals=S.goals||[];S.streak=S.streak||0;S.streakDays=S.streakDays||[];
+S.vidWatched=S.vidWatched||[];
+function save(){localStorage.setItem('mathx2',JSON.stringify(S))}
+
+/* FORMULA FILTER */
+let ff='all';
+
+/* NAVIGATION */
+function nav(id,btn){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-btn').forEach(b=>b.classList.remove('active'));
+  if(btn)btn.classList.add('active');
+  if(window.innerWidth<=960)closeSidebar();
+  setTimeout(revealOnScroll,80);
+  if(id==='formulas')setTimeout(renderKatex,200);
+}
+function toggleSidebar(){
+  document.getElementById('sidebar').classList.toggle('open');
+  document.querySelector('.overlay').classList.toggle('open');
+}
+function closeSidebar(){
+  document.getElementById('sidebar').classList.remove('open');
+  document.querySelector('.overlay').classList.remove('open');
+}
+
+/* CLOCK */
+setInterval(()=>{document.getElementById('clock').textContent=new Date().toLocaleTimeString()},1000);
+
+/* CURSOR */
+document.addEventListener('mousemove',e=>{
+  const c=document.getElementById('cursor'),r=document.getElementById('cursor-ring');
+  if(!c||!r)return;
+  c.style.left=e.clientX+'px';c.style.top=e.clientY+'px';
+  setTimeout(()=>{r.style.left=e.clientX+'px';r.style.top=e.clientY+'px'},60);
+});
+
+/* REVEAL */
+function revealOnScroll(){
+  const obs=new IntersectionObserver(entries=>{
+    entries.forEach((e,i)=>{if(e.isIntersecting){setTimeout(()=>e.target.classList.add('in'),i*60);obs.unobserve(e.target)}});
+  },{threshold:.06});
+  document.querySelectorAll('.reveal:not(.in)').forEach(el=>obs.observe(el));
+}
+window.addEventListener('scroll',revealOnScroll);
+
+/* PROGRESS */
+function updateProgress(){
+  const done=Object.values(S.sess).filter(Boolean).length;
+  const solvedProbs=Object.values(S.prob).filter(v=>v==='solved').length;
+  const pct=Math.round(done/6*100);
+  const ready=Math.round(pct*.6+solvedProbs/20*40);
+  const marksPred=ready>=80?'75-85':ready>=60?'60-74':ready>=40?'45-59':'30-44';
+  // Sidebar
+  document.getElementById('sp-val').textContent=pct+'%';
+  document.getElementById('sp-fill').style.width=pct+'%';
+  document.getElementById('sess-pill').textContent=done+'/6';
+  // Hero
+  document.getElementById('h-ready').textContent=ready+'%';
+  document.getElementById('h-ready-bar').style.width=ready+'%';
+  document.getElementById('h-sess').textContent=done+'/6';
+  document.getElementById('h-sess-bar').style.width=(done/6*100)+'%';
+  document.getElementById('h-prob').textContent=solvedProbs;
+  document.getElementById('h-prob-bar').style.width=(solvedProbs/20*100)+'%';
+  document.getElementById('h-streak').textContent=S.streak+' days';
+  document.getElementById('h-streak-bar').style.width=Math.min(100,S.streak/30*100)+'%';
+  document.getElementById('h-marks').textContent=marksPred;
+  document.getElementById('h-marks-bar').style.width=ready+'%';
+  // Analytics arcs (circumference of r=52 is ~327)
+  const C=327;
+  ['arc1','arc2','arc3','arc4'].forEach((id,i)=>{
+    const v=Math.min(100,pct*([1,.85,.78,.92][i]));
+    const el=document.getElementById(id);
+    if(el)el.style.strokeDasharray=`${C*v/100} ${C}`;
+    const ve=document.getElementById(id+'-val');
+    if(ve)ve.textContent=Math.round(v)+'%';
+  });
+  // Session status list
+  const list=document.getElementById('sess-status-list');
+  if(list){
+    list.innerHTML='';
+    SESSIONS_DATA.forEach(s=>{
+      const done2=S.sess[s.id];
+      const d=document.createElement('div');
+      d.style.cssText='display:flex;justify-content:space-between;font-size:12px;color:var(--snow2);padding:4px 0';
+      d.innerHTML=`<span>Session ${s.id}</span><span style="color:${done2?'var(--em)':'var(--snow3)'}">${done2?'✓ Done':'Pending'}</span>`;
+      list.appendChild(d);
+    });
+  }
+}
+
+/* ── RENDER AI ── */
+function renderAI(){
+  const g=document.getElementById('ai-grid');g.innerHTML='';
+  AI_DATA.forEach(a=>{
+    const c=document.createElement('div');
+    c.className='ai-card reveal';
+    const tagCls=a.tag==='hot'?'ai-tag-hot':a.tag==='high'?'ai-tag-high':'ai-tag-med';
+    const tagLabel=a.tag==='hot'?'🔴 Critical':a.tag==='high'?'🟠 High':'🟢 Medium';
+    c.innerHTML=`
+      <div class="ai-card-glow" style="background:${a.glow}"></div>
+      <div class="ai-tag ${tagCls}">${tagLabel}</div>
+      <div class="ai-topic">${a.topic}</div>
+      <div class="ai-meta">
+        <span class="ai-chip chip-freq">📊 Appeared ${a.freq}x</span>
+        <span class="ai-chip chip-marks">📌 ${a.marks} marks</span>
+        <span class="ai-chip chip-diff">⚡ ${a.diff}</span>
+      </div>
+      <div class="ai-prob-row">
+        <span class="ai-prob-label">Exam Probability</span>
+        <span class="ai-prob-val">${a.prob}%</span>
+      </div>
+      <div class="ai-bar"><div class="ai-bar-fill" style="background:${a.color};width:${a.prob}%"></div></div>
+      <div class="trend-row"><span class="trend-up">${a.trend}</span></div>
+    `;
+    g.appendChild(c);
+  });
+}
+
+/* ── RENDER SESSIONS ── */
+function renderSessions(){
+  const list=document.getElementById('sessions-list');list.innerHTML='';
+  SESSIONS_DATA.forEach(s=>{
+    const done=S.sess[s.id]||false;
+    const pct=done?100:getSessionPct(s.id);
+    const circ=2*Math.PI*21;
+    const offset=circ*(1-pct/100);
+    const d=document.createElement('div');
+    d.className='sess-card reveal'+(done?' open':'');
+    d.id='sc-'+s.id;
+    d.innerHTML=`
+      <div class="sess-header" onclick="toggleSess(${s.id})">
+        <div class="sess-badge ${s.cls}">${s.id}</div>
+        <div class="sess-info">
+          <div class="sess-title">${s.title}</div>
+          <div class="sess-chips">
+            <span class="sc-chip scc-time">⏱ ${s.dur}</span>
+            <span class="sc-chip scc-prob">🔥 PYQ: ${s.pyq}</span>
+            <span class="sc-chip scc-marks">📌 ~${s.marks} marks</span>
+          </div>
+        </div>
+        <div class="sess-ring">
+          <svg width="46" height="46" viewBox="0 0 46 46">
+            <circle class="ring-bg" cx="23" cy="23" r="21"/>
+            <circle class="ring-fg" cx="23" cy="23" r="21" stroke="${s.col}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
+          </svg>
+          <div class="ring-label">${Math.round(pct)}%</div>
+        </div>
+        <div class="sess-chevron">⌄</div>
+      </div>
+      <div class="sess-body">
+        <div class="sess-grid">
+          <div class="sess-block">
+            <div class="sb-title">📌 Core Concepts</div>
+            <ul class="sess-list">${s.concepts.map(c=>`<li>${c}</li>`).join('')}</ul>
+          </div>
+          <div class="sess-block">
+            <div class="sb-title">🧮 Key Formulas</div>
+            <ul class="sess-list">${s.formulas.map(f=>`<li style="font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--cl)">${f}</li>`).join('')}</ul>
+          </div>
+          <div class="sess-block">
+            <div class="sb-title">⚔️ Must-Solve Problems</div>
+            <ul class="sess-list">${s.problems.map(p=>`<li>${p}</li>`).join('')}</ul>
+          </div>
+          <div class="sess-block">
+            <div class="sb-title">⚡ Shortcut Tricks</div>
+            ${s.tricks.map(t=>`<div class="trick-box">${t}</div>`).join('')}
+          </div>
+          <div class="sess-block">
+            <div class="sb-title">⚠️ Common Traps</div>
+            ${s.traps.map(t=>`<div class="trap-box">${t}</div>`).join('')}
+          </div>
+          <div class="sess-block">
+            <div class="sb-title">✅ Revision Checklist</div>
+            <div class="checklist-wrap">
+              ${s.checklist.map((item,i)=>{
+                const key=`s${s.id}c${i}`;
+                const chk=S.cl[key]||false;
+                return`<label class="cl-item${chk?' done':''}" id="cl-${key}">
+                  <input type="checkbox" ${chk?'checked':''} onchange="checkItem('${key}',this)"> ${item}
+                </label>`;
+              }).join('')}
+            </div>
+            <div style="margin-top:10px;font-size:11px;color:var(--snow3);font-family:'JetBrains Mono',monospace">📺 ${s.yt}</div>
+          </div>
+        </div>
+        <button class="sess-complete-btn${done?' done':''}" id="scb-${s.id}" onclick="completeSession(${s.id})">${done?'✓ Completed!':'Mark Session Complete'}</button>
+      </div>
+    `;
+    list.appendChild(d);
+  });
+}
+function toggleSess(id){document.getElementById('sc-'+id).classList.toggle('open')}
+function checkItem(key,el){
+  S.cl[key]=el.checked;
+  document.getElementById('cl-'+key).classList.toggle('done',el.checked);
+  save();updateProgress();
+}
+function getSessionPct(id){
+  const s=SESSIONS_DATA.find(s=>s.id==id);
+  if(!s)return 0;
+  let done=0;
+  s.checklist.forEach((_,i)=>{if(S.cl[`s${id}c${i}`])done++;});
+  return s.checklist.length?Math.round(done/s.checklist.length*100):0;
+}
+function completeSession(id){
+  S.sess[id]=true;save();
+  document.getElementById('scb-'+id).classList.add('done');
+  document.getElementById('scb-'+id).textContent='✓ Completed!';
+  updateProgress();confetti();
+  toast('🎉','Session '+id+' complete! Great work!','var(--vl)');
+  renderSessions();
+}
+
+/* ── FORMULAS ── */
+function setFF(f,el){
+  ff=f;
+  document.querySelectorAll('#formulas .pill').forEach(p=>p.classList.remove('on'));
+  el.classList.add('on');renderFormulas();
+}
+function renderFormulas(){
+  const g=document.getElementById('fgrid');g.innerHTML='';
+  const q=(document.getElementById('fsearch')||{value:''}).value.toLowerCase();
+  FORMULAS_DATA.filter(f=>{
+    if(ff==='fav')return S.fav.includes(f.id);
+    if(ff!=='all'&&f.t!==ff)return false;
+    if(q&&!f.name.toLowerCase().includes(q)&&!f.desc.toLowerCase().includes(q))return false;
+    return true;
+  }).forEach(f=>{
+    const isFav=S.fav.includes(f.id);
+    const d=document.createElement('div');d.className='fcrd reveal';
+    d.innerHTML=`
+      <div class="fcrd-top">
+        <span class="f-topic">${f.t==='la'?'Linear Algebra':'Diff. Equations'}</span>
+        <button class="f-fav${isFav?' on':''}" onclick="toggleFav(${f.id})">★</button>
+      </div>
+      <div class="f-name">${f.name}</div>
+      <div class="f-display" id="fd-${f.id}">\\(${f.tex}\\)</div>
+      <div class="f-desc">${f.desc}</div>
+      <div class="f-btns">
+        <button class="f-btn" onclick="copyTxt('${f.tex.replace(/'/g,"\\'")}')">📋 Copy LaTeX</button>
+        <button class="f-btn" onclick="copyTxt('${f.desc.replace(/'/g,"\\'")}')">📝 Copy Desc</button>
+      </div>
+    `;
+    g.appendChild(d);
+  });
+  setTimeout(renderKatex,100);
+  setTimeout(revealOnScroll,150);
+}
+function toggleFav(id){
+  const i=S.fav.indexOf(id);
+  if(i===-1)S.fav.push(id);else S.fav.splice(i,1);
+  save();renderFormulas();
+}
+function copyTxt(t){navigator.clipboard.writeText(t).then(()=>toast('📋','Copied!','var(--cl)'))}
+
+/* ── PYQ ── */
+let pyqCat='all';
+function setPyqCat(c,el){
+  pyqCat=c;
+  document.querySelectorAll('.pyq-cat').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');renderPYQ();
+}
+function renderPYQ(){
+  const g=document.getElementById('pyq-grid');g.innerHTML='';
+  PYQ_DATA.filter(p=>pyqCat==='all'||p.cat.includes(pyqCat)).forEach(p=>{
+    const d=document.createElement('div');d.className='pyq-card reveal';
+    const badgeMap={rep:'pyq-b-rep',imp:'pyq-b-imp',exp:'pyq-b-exp',conf:'pyq-b-conf'};
+    const badgeTxt={rep:'🔁 Repeated',imp:'⭐ Important',exp:'🎯 Expected',conf:'✅ High Scoring'};
+    d.innerHTML=`
+      <div class="pyq-freq">${p.freq}x</div>
+      <div class="pyq-badges">${p.badges.map(b=>`<span class="pyq-b ${badgeMap[b]}">${badgeTxt[b]}</span>`).join('')}</div>
+      <div class="pyq-title">${p.title}</div>
+      <div class="pyq-desc">${p.desc}</div>
+      <div class="pyq-stats">
+        <div class="pyq-stat"><strong>${p.yr}</strong>Years</div>
+        <div class="pyq-stat"><strong>${p.marks}</strong>Marks</div>
+        <div class="pyq-stat"><strong>${p.diff}</strong>Level</div>
+      </div>
+    `;
+    g.appendChild(d);
+  });
+  setTimeout(revealOnScroll,100);
+}
+
+/* ── MOST REPEATED ── */
+const REP_PROBLEMS=[
+  {title:"3×3 Eigenvalue + Eigenvector + Diagonalize",topic:"Linear Algebra",freq:7,marks:14,diff:"Medium",trick:"2×2 short: λ²−(tr)λ+det=0. For 3×3 expand det(A−λI)"},
+  {title:"y''+by'+cy=g(x) — All root cases with IVP",topic:"2nd Order ODE",freq:6,marks:14,diff:"Medium",trick:"First classify discriminant → pick formula → find yₚ by UC"},
+  {title:"RREF and Parametric Solution",topic:"Linear Systems",freq:6,marks:8,diff:"Easy",trick:"Pivot=1 then zero above AND below. Free vars give parameters"},
+  {title:"Diagonalize A, Compute Aⁿ",topic:"Linear Algebra",freq:5,marks:12,diff:"Hard",trick:"Aⁿ=PD^nP⁻¹. D^n: just raise each diagonal entry to n"},
+  {title:"Solve y'+P(x)y=Q(x) by Integrating Factor",topic:"1st Order ODE",freq:5,marks:8,diff:"Medium",trick:"μ=e^∫P dx → multiply → LHS = d/dx[μy] → integrate"},
+  {title:"3×3 Determinant by Cofactor",topic:"Linear Algebra",freq:5,marks:6,diff:"Easy",trick:"Sign pattern: (+−+)(−+−)(+−+). Always along row 1 if possible"},
+  {title:"Inverse of 3×3 Matrix",topic:"Linear Algebra",freq:5,marks:8,diff:"Medium",trick:"[A|I] → row reduce → right side is A⁻¹ if left becomes I"},
+  {title:"Solve System of 2 ODEs via Eigenvalues",topic:"System ODE",freq:4,marks:14,diff:"Hard",trick:"Find λ,v of A. Write X=c₁v₁e^(λ₁t)+c₂v₂e^(λ₂t). Apply I.C."},
+  {title:"Non-homogeneous 2nd Order by UC",topic:"2nd Order ODE",freq:4,marks:10,diff:"Medium",trick:"RHS=eˣ→Aeˣ, sin→Asin+Bcos, poly→full poly. Resonance→×x"},
+  {title:"Bernoulli Equation with IVP",topic:"1st Order ODE",freq:3,marks:8,diff:"Medium",trick:"v=y^(1-n) → dv/dx+(1-n)Pv=(1-n)Q → IF method → back-sub"},
+  {title:"Check Consistency and Find Solution",topic:"Linear Systems",freq:5,marks:6,diff:"Easy",trick:"rank(A)=rank([A|b]) for consistent. rank<n → infinite solutions"},
+  {title:"Exact ODE Analysis",topic:"1st Order ODE",freq:3,marks:8,diff:"Medium",trick:"∂M/∂y=∂N/∂x? Yes: Fx=M,Fy=N. Find F then write F=C"}
+];
+function renderRepeated(){
+  const g=document.getElementById('rep-grid');g.innerHTML='';
+  REP_PROBLEMS.forEach((p,idx)=>{
+    const status=S.prob[idx]||'unsolved';
+    const d=document.createElement('div');d.className='rep-card reveal';
+    const diffCls=p.diff==='Easy'?'p-tag-easy':p.diff==='Hard'?'p-tag-hard':'p-tag-med';
+    d.innerHTML=`
+      <div class="rep-num">#{num} PROBLEM</div>
+      <div class="rep-title">${p.title}</div>
+      <div class="rep-tags">
+        <span class="ai-chip chip-freq">📊 ${p.freq}x repeated</span>
+        <span class="ai-chip chip-marks">📌 ${p.marks} marks</span>
+      </div>
+      <div class="rep-bar"><div class="rep-bar-fill" style="background:var(--gv);width:${Math.round(p.freq/7*100)}%"></div></div>
+      <div class="rep-trick">⚡ ${p.trick}</div>
+      <div class="rep-status-row">
+        <button class="rep-btn${status==='solved'?' solved':''}" onclick="setRepStatus(${idx},'solved',this.parentNode)"">✓ Solved</button>
+        <button class="rep-btn${status==='revisit'?' revisit':''}" onclick="setRepStatus(${idx},'revisit',this.parentNode)">↺ Revisit</button>
+      </div>
+    `;
+    d.querySelector('.rep-num').textContent=`#${String(idx+1).padStart(2,'0')} PROBLEM`;
+    g.appendChild(d);
+  });
+  setTimeout(revealOnScroll,100);
+}
+function setRepStatus(idx,st,row){
+  S.prob[idx]=st;save();
+  row.querySelectorAll('.rep-btn').forEach(b=>{b.classList.remove('solved','revisit')});
+  row.querySelector(`:nth-child(${st==='solved'?1:2})`).classList.add(st);
+  updateProgress();
+  if(st==='solved')toast('⚡','Marked as solved!','var(--em)');
+}
+
+/* ── EXPECTED QUESTIONS ── */
+function renderExpected(){
+  const g=document.getElementById('eq-grid');g.innerHTML='';
+  EXPECTED_Qs.forEach(q=>{
+    const d=document.createElement('div');d.className='eq-card reveal';
+    d.innerHTML=`
+      <div class="eq-conf"><div class="eq-conf-val">${q.conf}%</div><div class="eq-conf-label">CONF</div></div>
+      <div>
+        <div class="eq-type">${q.type}</div>
+        <div class="eq-title">${q.title}</div>
+        <div class="eq-desc">${q.desc}</div>
+      </div>
+      <div class="eq-marks"><div class="eq-marks-num">${q.marks}</div><div class="eq-marks-label">MARKS</div></div>
+    `;
+    g.appendChild(d);
+  });
+  setTimeout(revealOnScroll,100);
+}
+
+/* ── VIDEOS ── */
+let vidCat='all';
+const VID_COLORS=['#6c3fff','#2563eb','#0891b2','#e11d48','#d97706','#10b981'];
+function setVidCat(c,el){
+  vidCat=c;
+  document.querySelectorAll('.vhub-cat').forEach(b=>b.classList.remove('on'));
+  el.classList.add('on');renderVideos();
+}
+function renderVideos(){
+  const g=document.getElementById('vid-grid');g.innerHTML='';
+  VIDEOS_DATA.filter(v=>vidCat==='all'||v.cat===vidCat).forEach((v,i)=>{
+    const watched=S.vidWatched.includes(i);
+    const d=document.createElement('div');d.className='vid-card reveal';
+    const diffCls=v.diff==='easy'?'vt-easy':v.diff==='hard'?'vt-hard':'vt-med';
+    const diffLabel=v.diff==='easy'?'Beginner':v.diff==='hard'?'Advanced':'Intermediate';
+    d.innerHTML=`
+      <div class="vid-thumb">
+        <div class="vid-thumb-bg" style="background:linear-gradient(135deg,${v.color}22,${v.color}44)">
+          <div class="vid-play" style="background:${v.color}cc">▶</div>
+        </div>
+        <div class="vid-dur">${v.dur}</div>
+        <div class="vid-topic-tag">${v.topic}</div>
+      </div>
+      <div class="vid-body">
+        <div class="vid-creator">${v.creator}</div>
+        <div class="vid-title">${v.title}</div>
+        <div class="vid-tags">
+          <span class="vid-tag-diff ${diffCls}">${diffLabel}</span>
+          <span class="vid-tag-diff vt-exam">Exam: ${v.exam}</span>
+        </div>
+        <div class="vid-actions">
+          <a href="${v.url}" target="_blank" class="vid-btn vid-btn-primary">▶ Watch Now</a>
+          <button class="vid-btn vid-btn-secondary${watched?' vid-watched':''}" onclick="markWatched(${i},this)">${watched?'✓ Watched':'+ Watch Later'}</button>
+        </div>
+      </div>
+    `;
+    g.appendChild(d);
+  });
+  setTimeout(revealOnScroll,100);
+}
+function markWatched(i,btn){
+  if(!S.vidWatched.includes(i))S.vidWatched.push(i);
+  btn.classList.add('vid-watched');btn.textContent='✓ Watched';save();
+  toast('🎥','Video marked as watched!','var(--bl)');
+}
+
+/* ── TOP 15 ── */
+function renderTop15(){
+  const g=document.getElementById('t15-list');
+  TOP15_DATA.forEach(t=>{
+    const rankCls=t.rank===1?'r1':t.rank===2?'r2':t.rank===3?'r3':'r4plus';
+    const d=document.createElement('div');d.className='t15-card reveal';
+    d.innerHTML=`
+      <div class="t15-rank ${rankCls}">${t.rank<=9?'0'+t.rank:t.rank}</div>
+      <div class="t15-info">
+        <div class="t15-topic">${t.topic}</div>
+        <div class="t15-why">${t.why}</div>
+        <div class="t15-strat">⚡ ${t.strat}</div>
+      </div>
+      <div class="t15-right">
+        <div class="t15-marks">${t.marks}</div>
+        <div class="t15-m-label">MARKS</div>
+      </div>
+    `;
+    g.appendChild(d);
+  });
+}
+
+/* ── MISTAKES ── */
+function renderMistakes(){
+  const g=document.getElementById('mis-grid');
+  MISTAKES_DATA.forEach(m=>{
+    const d=document.createElement('div');d.className='mis-card reveal';
+    d.innerHTML=`
+      <div class="mis-trap">⚠ AVOID THIS TRAP</div>
+      <div class="mis-title">✗ ${m.title}</div>
+      <div class="mis-wrong">❌ Wrong: ${m.wrong}</div>
+      <div class="mis-right">✅ Correct: ${m.right}</div>
+    `;
+    g.appendChild(d);
+  });
+}
+
+/* ── ANALYTICS HEAT ── */
+const HEAT_DATA=[
+  {name:"Eigenvalue Problems",pct:30,color:"var(--rose)"},
+  {name:"2nd Order ODEs",pct:28,color:"var(--gold)"},
+  {name:"Gaussian Elimination",pct:24,color:"var(--vl)"},
+  {name:"Diagonalization",pct:22,color:"var(--bl)"},
+  {name:"Integrating Factor",pct:20,color:"var(--cl)"},
+  {name:"Determinants",pct:18,color:"var(--em)"},
+  {name:"Matrix Inverse",pct:16,color:"var(--rose)"},
+  {name:"System of ODEs",pct:14,color:"var(--gold)"}
+];
+function renderHeat(){
+  const g=document.getElementById('heat-grid');
+  const c=document.createElement('div');c.className='heat-card';
+  c.innerHTML=`<div class="heat-title">Topic Frequency Heatmap (PYQ Analysis)</div>`
+  HEAT_DATA.forEach(h=>{
+    const r=document.createElement('div');r.className='heat-row';
+    r.innerHTML=`<div class="heat-name">${h.name}</div><div class="heat-track"><div class="heat-fill" style="width:${h.pct/30*100}%;background:${h.color}"></div></div><div class="heat-pct">${h.pct}%</div>`;
+    c.appendChild(r);
+  });
+  g.appendChild(c);
+  const c2=document.createElement('div');c2.className='heat-card';
+  c2.innerHTML=`<div class="heat-title">Weak Areas (Self-Assessment)</div>`;
+  const weakData=[
+    {name:"Variation of Parameters",pct:65,color:"var(--rose)"},
+    {name:"System of ODEs",pct:55,color:"var(--gold)"},
+    {name:"Bernoulli Equation",pct:45,color:"var(--vl)"},
+    {name:"Exact ODEs",pct:40,color:"var(--bl)"},
+    {name:"Diagonalization",pct:35,color:"var(--cl)"}
+  ];
+  weakData.forEach(w=>{
+    const r=document.createElement('div');r.className='heat-row';
+    r.innerHTML=`<div class="heat-name">${w.name}</div><div class="heat-track"><div class="heat-fill" style="width:${w.pct}%;background:${w.color}"></div></div><div class="heat-pct">${w.pct}%</div>`;
+    c2.appendChild(r);
+  });
+  g.appendChild(c2);
+}
+
+/* ── REVISION ── */
+function renderRevision(){
+  const g=document.getElementById('rev-grid');
+  REVISION_DATA.forEach(r=>{
+    const d=document.createElement('div');d.className='rev-card reveal';
+    d.innerHTML=`
+      <div class="rev-phase">${r.phase}</div>
+      <div class="rev-title">${r.title}</div>
+      <ul class="rev-list">${r.items.map(i=>`<li class="rev-item">${i}</li>`).join('')}</ul>
+    `;
+    g.appendChild(d);
+  });
+}
+
+/* ── FLASHCARDS ── */
+let fcIdx=0,fcFlipped=false;
+function renderCard(){
+  const fc=FLASHCARDS[fcIdx];
+  document.getElementById('fc-q').textContent=fc.q;
+  document.getElementById('fc-a').textContent=fc.a;
+  document.getElementById('fc-counter').textContent=`${fcIdx+1}/${FLASHCARDS.length}`;
+  document.getElementById('flashcard').classList.remove('flipped');
+  fcFlipped=false;
+}
+function flipCard(){document.getElementById('flashcard').classList.toggle('flipped');fcFlipped=!fcFlipped}
+function nextCard(){fcIdx=(fcIdx+1)%FLASHCARDS.length;renderCard()}
+function prevCard(){fcIdx=(fcIdx-1+FLASHCARDS.length)%FLASHCARDS.length;renderCard()}
+
+/* ── TIMERS ── */
+let timerInt=null,timerSecs=0,timerRunning=false;
+function toggleTimer(){
+  timerRunning=!timerRunning;
+  document.getElementById('timer-btn').textContent=timerRunning?'⏸ Pause':'▶ Resume';
+  if(timerRunning)timerInt=setInterval(()=>{timerSecs++;updateTimerDisplay()},1000);
+  else clearInterval(timerInt);
+}
+function resetTimer(){timerSecs=0;timerRunning=false;clearInterval(timerInt);document.getElementById('timer-btn').textContent='▶ Start';updateTimerDisplay()}
+function setTimerTo(s){timerSecs=0;timerRunning=false;clearInterval(timerInt);document.getElementById('timer-btn').textContent='▶ Start';updateTimerDisplay()}
+function updateTimerDisplay(){
+  const h=Math.floor(timerSecs/3600).toString().padStart(2,'0');
+  const m=Math.floor(timerSecs%3600/60).toString().padStart(2,'0');
+  const s=(timerSecs%60).toString().padStart(2,'0');
+  document.getElementById('main-timer').textContent=`${h}:${m}:${s}`;
+}
+
+let pomSecs=1500,pomRunning=false,pomMode2='work',pomInt=null,pomDone2=0;
+function togglePom(){
+  pomRunning=!pomRunning;
+  document.getElementById('pom-btn').textContent=pomRunning?'⏸ Pause':'▶ Start';
+  if(pomRunning)pomInt=setInterval(()=>{
+    pomSecs--;updatePomDisplay();
+    if(pomSecs<=0){clearInterval(pomInt);pomRunning=false;pomDone2++;
+      document.querySelectorAll('.pcrc')[Math.min(pomDone2-1,3)]?.classList.add('done');
+      toast('🍅','Pomodoro done! Take a break.','var(--em)');
+      document.getElementById('pom-btn').textContent='▶ Start';
+      setPomMode(pomMode2==='work'?'break':'work');
+    }
+  },1000);
+  else clearInterval(pomInt);
+}
+function resetPom(){pomSecs=pomMode2==='work'?1500:300;pomRunning=false;clearInterval(pomInt);document.getElementById('pom-btn').textContent='▶ Start';updatePomDisplay()}
+function setPomMode(m){pomMode2=m;pomSecs=m==='work'?1500:300;document.getElementById('pom-mode').textContent=m==='work'?'WORK SESSION':'BREAK TIME';updatePomDisplay()}
+function updatePomDisplay(){
+  const m=Math.floor(pomSecs/60).toString().padStart(2,'0');
+  const s=(pomSecs%60).toString().padStart(2,'0');
+  document.getElementById('pom-display').textContent=`${m}:${s}`;
+}
+
+/* ── FOCUS MODE ── */
+let focusSecs=1500,focusTotal=1500,focusRunning=false,focusInt=null;
+const FOCUS_QUOTES=["An hour of focused study is worth ten hours of distracted effort.","The expert in anything was once a beginner who refused to quit.","Concentrate all your thoughts upon the work at hand. The sun's rays do not burn until brought to a focus.","It is not that I'm so smart. But I stay with the questions much longer."];
+function toggleFocus(){
+  focusRunning=!focusRunning;
+  document.getElementById('focus-btn').textContent=focusRunning?'⏸ Pause Session':'▶ Begin Focus Session';
+  if(focusRunning)focusInt=setInterval(()=>{
+    focusSecs--;updateFocusDisplay();
+    if(focusSecs<=0){clearInterval(focusInt);focusRunning=false;focusSecs=focusTotal;
+      document.getElementById('focus-btn').textContent='▶ Begin Focus Session';
+      toast('🔵','Focus session complete! Well done.','var(--vl)');updateFocusDisplay();
+    }
+  },1000);
+  else clearInterval(focusInt);
+}
+function resetFocus(){focusSecs=focusTotal;focusRunning=false;clearInterval(focusInt);document.getElementById('focus-btn').textContent='▶ Begin Focus Session';updateFocusDisplay()}
+function setFocusTime(s){focusSecs=focusTotal=s;resetFocus()}
+function updateFocusDisplay(){
+  const m=Math.floor(focusSecs/60).toString().padStart(2,'0');
+  const s=(focusSecs%60).toString().padStart(2,'0');
+  document.getElementById('focus-timer').textContent=`${m}:${s}`;
+  document.getElementById('focus-label').textContent=focusRunning?'IN FOCUS':'READY TO FOCUS';
+  const C=723,pct=(focusTotal-focusSecs)/focusTotal;
+  const arc=document.getElementById('focus-arc');
+  if(arc)arc.style.strokeDasharray=`${C*pct} ${C}`;
+}
+
+/* ── RAPID REVISION ── */
+function renderRapidRev(){
+  const el=document.getElementById('rapid-rev');
+  RAPID_REV.forEach(r=>{
+    const d=document.createElement('div');d.className='rapid-item';d.textContent=r;
+    el.appendChild(d);
+  });
+}
+
+/* ── PRODUCTIVITY ── */
+function addGoal(){
+  const inp=document.getElementById('goal-inp');
+  const text=inp.value.trim();if(!text)return;
+  S.goals.push({text,done:false,id:Date.now()});inp.value='';save();renderGoals();
+}
+function renderGoals(){
+  const list=document.getElementById('goals-list');list.innerHTML='';
+  S.goals.forEach((g,i)=>{
+    const d=document.createElement('div');d.className='goal-item';
+    d.innerHTML=`<input type="checkbox" ${g.done?'checked':''} onchange="toggleGoal(${i})"><span style="${g.done?'text-decoration:line-through;color:var(--snow3)':''}">${g.text}</span><button onclick="removeGoal(${i})" style="margin-left:auto;background:none;border:none;color:var(--snow3);cursor:pointer;font-size:14px">✕</button>`;
+    list.appendChild(d);
+  });
+}
+function toggleGoal(i){S.goals[i].done=!S.goals[i].done;save();renderGoals()}
+function removeGoal(i){S.goals.splice(i,1);save();renderGoals()}
+function logStreak(){
+  const today=new Date().toDateString();
+  if(!S.streakDays.includes(today)){
+    S.streakDays.push(today);S.streak++;save();
+    toast('🔥','Streak logged! Day '+S.streak,'var(--gold)');
+  }else toast('✓','Already logged today!','var(--em)');
+  renderStreakCal();updateProgress();
+}
+function renderStreakCal(){
+  const cal=document.getElementById('streak-cal');if(!cal)return;
+  cal.innerHTML='';
+  const today=new Date();
+  for(let i=27;i>=0;i--){
+    const d2=new Date(today);d2.setDate(d2.getDate()-i);
+    const ds=d2.toDateString();
+    const d=document.createElement('div');
+    d.className=`scal-day${S.streakDays.includes(ds)?' hit':''}${i===0?' today':''}`;
+    cal.appendChild(d);
+  }
+  const sd=document.getElementById('streak-display');
+  if(sd)sd.textContent=S.streak;
+}
+function exportData(){
+  const blob=new Blob([JSON.stringify({sessions:S.sess,problems:S.prob,streak:S.streak,exported:new Date().toISOString()},null,2)],{type:'application/json'});
+  const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='mathx-progress.json';a.click();
+  toast('📤','Progress exported!','var(--cl)');
+}
+function resetAll(){S={sess:{},cl:{},prob:{},fav:[],goals:[],streak:0,streakDays:[],vidWatched:[]};save();location.reload()}
+
+/* ── TOAST ── */
+function toast(icon,msg,color){
+  const c=document.getElementById('toasts');
+  const t=document.createElement('div');
+  t.className='toast';t.style.borderColor=color||'var(--rim2)';
+  t.innerHTML=`<span style="font-size:18px">${icon}</span> ${msg}`;
+  c.appendChild(t);setTimeout(()=>t.remove(),3500);
+}
+
+/* ── CONFETTI ── */
+function confetti(){
+  const colors=['#6c3fff','#2563eb','#06b6d4','#e11d48','#10b981','#d97706'];
+  for(let i=0;i<90;i++){
+    const p=document.createElement('div');p.className='cfp';
+    p.style.cssText=`left:${Math.random()*100}vw;top:0;width:${6+Math.random()*6}px;height:${6+Math.random()*6}px;background:${colors[Math.floor(Math.random()*colors.length)]};border-radius:${Math.random()>0.5?'50%':'2px'};animation-delay:${Math.random()*.8}s;animation-duration:${2+Math.random()*2}s`;
+    document.body.appendChild(p);setTimeout(()=>p.remove(),4000);
+  }
+}
+
+/* ── KATEX ── */
+function renderKatex(){
+  if(window.renderMathInElement){
+    renderMathInElement(document.body,{delimiters:[{left:'\\(',right:'\\)',display:false},{left:'\\[',right:'\\]',display:true}],throwOnError:false});
+  }
+}
+
+/* ── FOCUS QUOTE ── */
+function cycleQuote(){
+  const q=FOCUS_QUOTES[Math.floor(Math.random()*FOCUS_QUOTES.length)];
+  document.getElementById('focus-quote').textContent=`"${q}"`;
+}
+setInterval(cycleQuote,8000);
+
+/* ── INIT ── */
+document.addEventListener('DOMContentLoaded',()=>{
+  // Hide loader
+  setTimeout(()=>{document.getElementById('loader').classList.add('gone')},2200);
+
+  // Render all sections
+  renderAI();
+  renderSessions();
+  renderFormulas();
+  renderPYQ();
+  renderRepeated();
+  renderExpected();
+  renderVideos();
+  renderTop15();
+  renderMistakes();
+  renderHeat();
+  renderRevision();
+  renderCard();
+  renderRapidRev();
+  renderGoals();
+  renderStreakCal();
+  updateProgress();
+
+  setTimeout(revealOnScroll,2400);
+  setTimeout(renderKatex,2500);
+});
+</script>
+</body>
+</html>
